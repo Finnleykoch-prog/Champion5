@@ -156,6 +156,7 @@ function setMode(m){
   $("aPass").autocomplete = m === "up" ? "new-password" : "current-password";
   $("aErr").textContent = ""; $("aErr").className = "formerr";
   $("aForgot").hidden = m !== "in";
+  $("aLegal").hidden = m !== "up";
 }
 $("tabUp").onclick = () => setMode("up");
 $("tabIn").onclick = () => setMode("in");
@@ -215,6 +216,32 @@ $("authForm").addEventListener("submit", async ev => {
 });
 
 $("logout").onclick = async () => { await sb.auth.signOut(); };
+
+/* ---------------- Account panel ---------------- */
+$("meName").onclick = async () => {
+  const p = $("acctPanel"), open = p.hidden;
+  p.hidden = !open; $("meName").setAttribute("aria-expanded", open);
+  if (!open) return;
+  $("acUser").textContent = ME.username; $("delName").textContent = ME.username;
+  $("acJoined").textContent = ME.created_at ? new Date(ME.created_at).toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"}) : "";
+  $("delConfirm").value = ""; $("delBtn").disabled = true; $("delErr").textContent = "";
+  try { const { data } = await sb.auth.getUser(); $("acEmail").textContent = (data && data.user && data.user.email) || ""; } catch (e) {}
+};
+$("delConfirm").addEventListener("input", () => {
+  $("delBtn").disabled = $("delConfirm").value.trim().toLowerCase() !== ME.username;
+});
+$("delBtn").onclick = async () => {
+  $("delBtn").disabled = true; $("delErr").textContent = "";
+  try {
+    await rpc("delete_my_account", { p_confirm: $("delConfirm").value.trim() });
+    await sb.auth.signOut();
+    $("acctPanel").hidden = true;
+    toast("Your account was deleted");
+  } catch (e){
+    $("delErr").textContent = /delete_my_account/.test(e.message || "") ? "Account deletion isn't set up yet. Contact the site owner." : "Couldn't delete your account. Try again.";
+    $("delBtn").disabled = false;
+  }
+};
 
 /* ---------------- Password reset ---------------- */
 $("aForgot").onclick = () => { $("fEmail").value = $("aEmail").value.trim(); $("fpMsg").textContent = ""; show("forgot"); };

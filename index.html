@@ -64,6 +64,7 @@
       <p class="formerr" id="aErr" role="alert"></p>
       <button class="btn btn-main" id="aSubmit" type="submit"><span id="aSubmitT">Create account</span><span class="arrow">›</span></button>
       <button class="skip" id="aForgot" type="button" hidden>Forgot your password?</button>
+      <p class="legal" id="aLegal">By creating an account you agree to our <a href="/privacy" target="_blank" rel="noopener">Privacy policy</a>.</p>
     </form>
   </section>
 
@@ -104,7 +105,22 @@
   <section class="screen" id="home" hidden>
     <div class="homehead">
       <div class="logo" aria-label="Champion 5">CHAMPION <span class="five">5</span></div>
-      <div class="whoami"><span id="meName"></span><button type="button" class="skip" id="logout">Log out</button></div>
+      <div class="whoami"><button type="button" class="acctlink" id="meName" aria-expanded="false" aria-controls="acctPanel"></button></div>
+    </div>
+    <div class="acct" id="acctPanel" hidden>
+      <div class="acct-row"><b>Account</b><span id="acUser"></span></div>
+      <div class="acct-row"><span>Email</span><b id="acEmail"></b></div>
+      <div class="acct-row"><span>Joined</span><b id="acJoined"></b></div>
+      <div class="acct-row"><a href="/privacy" target="_blank" rel="noopener">Privacy policy</a><button type="button" class="linkbtn" id="logout">Log out</button></div>
+      <div class="dz">
+        <h3>Delete my account</h3>
+        <p>This permanently removes your email, username, rating and every game you've played. It can't be undone.</p>
+        <label class="sr" for="delConfirm">Type your username to confirm</label>
+        <input id="delConfirm" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your username">
+        <button class="btn btn-danger" id="delBtn" type="button" disabled><span>Delete my account forever</span><span class="arrow">›</span></button>
+        <p id="delHint">Type <b id="delName"></b> above to confirm.</p>
+        <p class="formerr" id="delErr" role="alert"></p>
+      </div>
     </div>
     <div class="rank" id="rankCard">
       <div class="badge" id="rBadge">S</div>
@@ -136,7 +152,7 @@
     </ul>
     <button class="btn btn-alt" id="openLeaders"><span>Leaderboard<small id="lbTeaser">Top players and today's best scores</small></span><span class="arrow">›</span></button>
     <button class="btn btn-alt" id="openStats" hidden><span>Owner stats<small>Players, scores and top answers by day · only you see this</small></span><span class="arrow">›</span></button>
-    <p class="foot" id="foot">New set every day at <span id="dropTime">midnight ET</span> · <button class="skip inline" id="openHowto" type="button">How to play</button></p>
+    <p class="foot" id="foot">New set every day at <span id="dropTime">midnight ET</span> · <button class="skip inline" id="openHowto" type="button">How to play</button> · <a class="skip inline" href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
   </section>
 
   <!-- HOW TO PLAY -->
