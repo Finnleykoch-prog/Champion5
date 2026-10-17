@@ -79,15 +79,18 @@ function secsToDrop(){
 function hms(s){ return [Math.floor(s/3600), Math.floor(s%3600/60), s%60].map(x => String(x).padStart(2, "0")).join(":"); }
 
 /* ---------------- Tiers (display only; the server keeps the real rating) ---------------- */
+// Each tier is 120 rating points: 3 divisions of 40 (III, II, I). Everyone starts
+// at 1,000, the middle of Silver II. Bronze III has no floor; Champion no ceiling.
+const TIER_WIDTH = 120;
 const TIERS = [
-  {n:"Bronze",min:0,c:"#c88a52"},{n:"Silver",min:900,c:"#c3cddc"},{n:"Gold",min:1100,c:"#ffc93c"},
-  {n:"Platinum",min:1300,c:"#6fe3d6"},{n:"Diamond",min:1500,c:"#8ab4ff"},{n:"Champion",min:1700,c:"#ff7ad9"}
+  {n:"Bronze",min:0,c:"#c88a52"},{n:"Silver",min:940,c:"#c3cddc"},{n:"Gold",min:1060,c:"#ffc93c"},
+  {n:"Platinum",min:1180,c:"#6fe3d6"},{n:"Diamond",min:1300,c:"#8ab4ff"},{n:"Champion",min:1420,c:"#ff7ad9"}
 ];
 function tierOf(r){
   let i = 0; for (let k = 0; k < TIERS.length; k++) if (r >= TIERS[k].min) i = k;
   const t = TIERS[i], next = TIERS[i+1];
   if (!next) return {name:t.n, short:t.n[0], c:t.c, next:null};
-  const lo = i === 0 ? 700 : t.min, span = next.min - lo, into = Math.max(0, r - lo);
+  const lo = i === 0 ? next.min - TIER_WIDTH : t.min, span = next.min - lo, into = Math.max(0, r - lo);
   const div = 3 - Math.min(2, Math.floor(into / (span / 3)));
   return {name:`${t.n} ${["","I","II","III"][div]}`, short:t.n[0], c:t.c, next:next.n, toNext:next.min - r};
 }
@@ -96,7 +99,7 @@ function divisions(){
   TIERS.forEach((t, i) => {
     const next = TIERS[i+1];
     if (!next){ out.push({name:t.n, tier:t.n, lo:t.min, hi:Infinity, c:t.c}); return; }
-    const lo = i === 0 ? 700 : t.min, span = next.min - lo;
+    const lo = i === 0 ? next.min - TIER_WIDTH : t.min, span = next.min - lo;
     ["III","II","I"].forEach((d, k) => out.push({name:`${t.n} ${d}`, tier:t.n,
       lo:(i === 0 && k === 0) ? -Infinity : Math.ceil(lo + span*k/3), hi:Math.ceil(lo + span*(k+1)/3), c:t.c}));
   });
@@ -456,7 +459,7 @@ async function boot(){
 }
 
 /* ---------------- Rank ladder ---------------- */
-const SCALE_LO = 700, SCALE_HI = 1800;
+const SCALE_LO = 820, SCALE_HI = 1540;   // one tier-width of Bronze and of Champion shown
 const toPct = r => Math.max(0, Math.min(100, (r - SCALE_LO) / (SCALE_HI - SCALE_LO) * 100));
 function renderLadder(el, r, prev){
   const i = DIVS.findIndex(d => r >= d.lo && r < d.hi), d = DIVS[i], up = DIVS[i+1], down = DIVS[i-1];
@@ -483,7 +486,7 @@ function renderLadder(el, r, prev){
   me.style.left = toPct(prev != null ? prev : r) + "%"; sc.appendChild(me);
   if (prev != null) requestAnimationFrame(() => requestAnimationFrame(() => { me.style.left = toPct(r) + "%"; }));
   el.append(sc, lb);
-  const lo = isFinite(d.lo) ? d.lo : d.hi - 67, hi = isFinite(d.hi) ? d.hi : d.lo + 100;
+  const lo = isFinite(d.lo) ? d.lo : d.hi - TIER_WIDTH / 3, hi = isFinite(d.hi) ? d.hi : d.lo + TIER_WIDTH;
   const bar = document.createElement("div"); bar.className = "div-bar";
   const fill = document.createElement("i"); fill.style.background = d.c;
   fill.style.width = Math.max(3, Math.min(100, (r - lo) / (hi - lo) * 100)) + "%"; bar.appendChild(fill);
