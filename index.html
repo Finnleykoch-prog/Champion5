@@ -118,6 +118,7 @@
       <div class="stat"><b id="sStreak">0</b><span>Day streak</span></div>
       <div class="stat"><b id="sBest">0</b><span>Best rating</span></div>
     </div>
+    <div class="done" id="bannedNote" hidden><div class="done-res l">Account suspended</div><p class="tag">This account can't play right now. If you think this is a mistake, contact the site owner.</p></div>
     <button class="btn btn-main" id="playDaily"><span>Play today's match<small>One ranked match a day · same 5 categories for everyone</small></span><span class="arrow">›</span></button>
     <div class="done" id="doneCard" hidden>
       <div class="done-head"><span class="label">Today's result</span><span class="next">Next match in <b class="num" id="dCount">--:--:--</b></span></div>
@@ -227,7 +228,7 @@
       <div class="block"><span class="label">By round</span><div class="board"><table id="stRounds"></table></div></div>
       <div class="block"><span class="label">Top answers</span><div class="answers" id="stAns"></div></div>
       <div class="block"><span class="label">Players</span><div class="board scroll"><table id="stPlayers"></table></div></div>
-      <div class="block"><span class="label">All players</span><div class="board scroll"><table id="stAll"></table></div></div>
+      <div class="block"><span class="label">All players</span><p class="statnote" id="stAllNote"></p><div class="board scroll"><table id="stAll"></table></div></div>
     </div>
   </section>
 

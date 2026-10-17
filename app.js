@@ -142,6 +142,11 @@ function pctOf(total, others){
 }
 
 /* ---------------- Auth ---------------- */
+// "ok" | "taken" | "invalid" | "blocked". Falls back to the older check if update 3 isn't installed.
+async function usernameStatus(name){
+  try { return await rpc("check_username", { name }); }
+  catch (e){ return (await rpc("username_available", { name })) ? "ok" : "taken"; }
+}
 let mode = "up";
 function setMode(m){
   mode = m;
@@ -164,9 +169,10 @@ $("aUser").addEventListener("input", () => {
   setTimeout(async () => {
     if (my !== userCheck) return;
     try {
-      const ok = await rpc("username_available", { name: v });
+      const st = await usernameStatus(v);
       if (my !== userCheck) return;
-      hint.className = ok ? "ok" : "bad"; hint.textContent = ok ? `${v} is available` : `${v} is taken`;
+      hint.className = st === "ok" ? "ok" : "bad";
+      hint.textContent = st === "ok" ? `${v} is available` : st === "blocked" ? "That username isn't allowed. Pick another." : `${v} is taken`;
     } catch (e){ hint.className = ""; hint.textContent = ""; }
   }, 350);
 });
@@ -182,7 +188,9 @@ $("authForm").addEventListener("submit", async ev => {
     if (mode === "up"){
       if (!/^[a-z0-9_]{3,16}$/.test(username)) throw new Error("Pick a username: 3–16 letters, numbers or underscores.");
       if (password.length < 6) throw new Error("Use a password with at least 6 characters.");
-      if (!(await rpc("username_available", { name: username }))) throw new Error(`${username} is taken. Try another username.`);
+      const st = await usernameStatus(username);
+      if (st === "blocked") throw new Error("That username isn't allowed. Pick another one.");
+      if (st !== "ok") throw new Error(`${username} is taken. Try another username.`);
       const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username } } });
       if (error) throw error;
       if (!data.session){
@@ -201,7 +209,7 @@ $("authForm").addEventListener("submit", async ev => {
     err.textContent =
       /Invalid login/i.test(m) ? "That email and password don't match. Check them and try again." :
       /already registered/i.test(m) ? "That email already has an account. Log in instead." :
-      /Database error/i.test(m) ? "That username was just taken. Pick another one." :
+      /Database error|not_allowed/i.test(m) ? "That username isn't available. Pick another one." :
       m || "Something went wrong. Try again.";
   } finally { $("aSubmit").disabled = false; }
 });
@@ -379,7 +387,8 @@ function renderHome(){
   $("sStreak").textContent = live ? ME.streak : 0;
   $("openStats").hidden = !ME.is_admin;
   const done = !!RUN;
-  $("playDaily").hidden = done; $("doneCard").hidden = !done;
+  $("playDaily").hidden = done || !!ME.banned; $("doneCard").hidden = !done;
+  $("bannedNote").hidden = !ME.banned;
   $("dPct").hidden = true; $("dGhost").hidden = true;
   if (done){
     const dr = $("dRes");
@@ -458,7 +467,7 @@ async function startMatch(){
       wait(1400 + Math.random() * 800)
     ]);
   } catch (e){
-    if (/already_played/.test(e.message || "")){ await loadState(); renderHome(); return; }
+    if (/already_played|banned/.test(e.message || "")){ await loadState(); renderHome(); return; }
     $("qErr").textContent = "Couldn't start the match. Check your connection and try again.";
     setTimeout(() => boot(), 2500); return;
   }
@@ -826,19 +835,70 @@ async function openStats(day){
   });
   tb.appendChild(body);
 }
-// Everyone signed up, by rating.
+// Everyone signed up. Names the filter flags come first, so you can fix them.
 async function renderAllPlayers(){
-  const { data } = await sb.from("profiles").select("username,rating,wins,losses,draws,streak,created_at").order("rating", { ascending: false }).limit(500);
-  const tb = $("stAll"); tb.innerHTML = `<thead><tr><th>Player</th><th class="n">Rating</th><th>Record</th><th>Joined</th></tr></thead>`;
+  const tb = $("stAll");
+  let players;
+  try { players = await rpc("admin_players"); }
+  catch (e){
+    // Update 3 not installed yet: plain list without the tools.
+    const { data } = await sb.from("profiles").select("id,username,rating,wins,losses,draws,created_at").order("rating", { ascending: false }).limit(500);
+    players = data || [];
+  }
+  const flagged = players.filter(p => p.flagged && !p.banned).length;
+  $("stAllNote").textContent = flagged ? `${flagged} username${flagged === 1 ? "" : "s"} flagged by the filter. Tap Manage to rename or ban.` : "";
+  tb.innerHTML = `<thead><tr><th>Player</th><th class="n">Rating</th><th>Record</th><th></th></tr></thead>`;
   const body = document.createElement("tbody");
-  (data || []).forEach(p => {
-    const tr = document.createElement("tr");
-    [p.username, fmt(p.rating), `${p.wins}–${p.losses}${p.draws ? "–" + p.draws : ""}`, new Date(p.created_at).toLocaleDateString("en-US", {month:"short", day:"numeric"})]
-      .forEach((t, ci) => { const td = document.createElement("td"); td.textContent = t; if (ci === 1) td.className = "n"; if (ci >= 2) td.className = "dim"; tr.appendChild(td); });
-    body.appendChild(tr);
+  players.forEach(p => {
+    const tr = document.createElement("tr"); if (p.banned) tr.className = "banned";
+    const name = document.createElement("td"); name.textContent = p.username;
+    if (p.flagged) name.appendChild(el("span", "pill bad", "flagged"));
+    if (p.banned) name.appendChild(el("span", "pill", "banned"));
+    const rt = el("td", "n", fmt(p.rating)), rec = el("td", "dim", `${p.wins}–${p.losses}${p.draws ? "–" + p.draws : ""}`);
+    const act = document.createElement("td"); act.className = "act";
+    if (p.id && p.id !== ME.id && "flagged" in p){
+      const b = el("button", "mini", "Manage"); b.type = "button";
+      b.onclick = () => toggleManage(tr, p); act.appendChild(b);
+    }
+    tr.append(name, rt, rec, act); body.appendChild(tr);
   });
   tb.appendChild(body);
 }
+function toggleManage(tr, p){
+  const next = tr.nextElementSibling;
+  if (next && next.classList.contains("manage")){ next.remove(); return; }
+  const row = document.createElement("tr"); row.className = "manage";
+  const td = document.createElement("td"); td.colSpan = 4;
+  const box = el("div", "managebox");
+  const ren = el("div", "renrow"), inp = document.createElement("input");
+  inp.type = "text"; inp.maxLength = 16; inp.value = p.username; inp.setAttribute("aria-label", "New username"); inp.autocapitalize = "off"; inp.spellcheck = false;
+  const save = el("button", "mini ok", "Rename"); save.type = "button";
+  const msg = el("p", "formerr");
+  save.onclick = async () => {
+    const v = inp.value.trim().toLowerCase(); msg.className = "formerr"; msg.textContent = "";
+    if (v === p.username) return;
+    save.disabled = true;
+    try {
+      const r = await rpc("admin_rename", { p_user: p.id, p_new: v });
+      if (r === "ok"){ toast(`Renamed to ${v}`); openStats(stDay); return; }
+      msg.textContent = r === "blocked" ? "That name is blocked too." : r === "taken" ? "That name is taken." : "Use 3–16 letters, numbers or underscores.";
+    } catch (e){ msg.textContent = "Couldn't rename. Try again."; }
+    save.disabled = false;
+  };
+  ren.append(inp, save);
+  const ban = el("button", "mini " + (p.banned ? "" : "danger"), p.banned ? "Unban" : "Ban player"); ban.type = "button";
+  let armed = false;
+  ban.onclick = async () => {
+    if (!p.banned && !armed){ armed = true; ban.textContent = "Tap again to ban"; setTimeout(() => { armed = false; ban.textContent = "Ban player"; }, 3000); return; }
+    ban.disabled = true;
+    try { await rpc("admin_set_banned", { p_user: p.id, p_banned: !p.banned }); toast(p.banned ? "Unbanned" : "Banned"); openStats(stDay); }
+    catch (e){ ban.disabled = false; msg.textContent = "Couldn't update. Try again."; }
+  };
+  const note = el("p", "statnote", p.banned ? "Banned: can't play, hidden from the leaderboard, matchmaking and stats." : "Banning stops them playing and hides them from the leaderboard, matchmaking and stats.");
+  box.append(ren, ban, note, msg); td.appendChild(box); row.appendChild(td);
+  tr.after(row); inp.focus();
+}
+function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
 /* ---------------- Effects ---------------- */
 function comboFx(text){
