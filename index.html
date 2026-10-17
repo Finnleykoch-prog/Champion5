@@ -37,35 +37,100 @@
     <div class="center"><div class="logo" aria-label="Champion 5">CHAMPION <span class="five">5</span></div><p class="tag" id="loadMsg">Loading…</p></div>
   </section>
 
-  <!-- SIGN UP / LOG IN -->
+  <!-- WELCOME / SIGN UP / LOG IN -->
   <section class="screen" id="auth" hidden>
-    <div>
-      <div class="logo" aria-label="Champion 5">CHAMPION <span class="five">5</span></div>
-      <p class="tag">Five categories. 15 seconds each. Name as many as you can and outscore your opponent. One ranked match a day.</p>
+    <div class="logo wl-logo" aria-label="Champion 5">CHAMPION <span class="five">5</span></div>
+    <p class="wl-pitch">Name as many as you can in <b>15 seconds</b>. Beat a real player. <b>One ranked match a day.</b></p>
+
+    <div class="wl-stagewrap">
+      <div class="wl-stage" id="wStage" aria-hidden="true">
+        <div class="wl-hud">
+          <div class="side you"><span class="who">You</span><span class="sc" id="wYou">0</span></div>
+          <div class="wl-clock" id="wClock">15</div>
+          <div class="side opp r"><span class="who">jake</span><span class="sc" id="wOpp">0</span></div>
+        </div>
+        <div class="timer"><i id="wBar"></i></div>
+        <div class="wl-cat"><small id="wRound">Round 1 of 5</small><b id="wCat">NFL Teams</b></div>
+        <div class="wl-typed" id="wTyped"><span id="wText"></span><span class="ht-caret"></span></div>
+        <div class="wl-fb" id="wFb"></div>
+        <div class="chips wl-chips" id="wChips"></div>
+      </div>
     </div>
-    <div class="tabs" role="tablist">
-      <button type="button" role="tab" id="tabUp" aria-selected="true">Create account</button>
-      <button type="button" role="tab" id="tabIn" aria-selected="false">Log in</button>
+
+    <div class="wl-live" id="wLive" hidden><span class="wl-dot"></span><span><b id="wPlayers">0</b> <span id="wPlayersL">players</span> today</span><span id="wTopW">·</span><span id="wTop">top score <b id="wTopN">0</b></span></div>
+
+    <div class="wl-ctas">
+      <button class="btn btn-main" id="wTry" type="button"><span>Try a free round<small>15 seconds · no account needed</small></span><span class="arrow">›</span></button>
+      <button class="btn btn-alt" id="wToForm" type="button"><span>Create an account<small>Play today's ranked match</small></span><span class="arrow">›</span></button>
+      <button class="skip" id="wToLogin" type="button">Already playing? Log in</button>
     </div>
-    <form id="authForm" class="authform" novalidate>
-      <div class="field" id="fUser">
-        <label for="aUser">Username</label>
-        <input id="aUser" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16" placeholder="e.g. trivia_king">
-        <small id="aUserHint">3–16 letters, numbers or underscores. Other players see this.</small>
+
+    <div class="wl-how">
+      <div><b>5</b><span>categories a day</span></div>
+      <div><b>15s</b><span>per round</span></div>
+      <div><b>1</b><span>shot at glory</span></div>
+    </div>
+
+    <div class="wl-tiers">
+      <h2>Where will you rank?</h2>
+      <div class="wl-tierrow" id="wTiers"></div>
+    </div>
+
+    <div class="wl-formcard" id="wForm">
+      <h2 id="wFormTitle">Join the game</h2>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="tabUp" aria-selected="true">Create account</button>
+        <button type="button" role="tab" id="tabIn" aria-selected="false">Log in</button>
       </div>
-      <div class="field">
-        <label for="aEmail">Email</label>
-        <input id="aEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      <form id="authForm" class="authform" novalidate>
+        <div class="field" id="fUser">
+          <label for="aUser">Username</label>
+          <input id="aUser" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16" placeholder="e.g. trivia_king">
+          <small id="aUserHint">3–16 letters, numbers or underscores. Other players see this.</small>
+        </div>
+        <div class="field">
+          <label for="aEmail">Email</label>
+          <input id="aEmail" type="email" autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="aPass">Password</label>
+          <input id="aPass" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+        </div>
+        <p class="formerr" id="aErr" role="alert"></p>
+        <button class="btn btn-main" id="aSubmit" type="submit"><span id="aSubmitT">Create account</span><span class="arrow">›</span></button>
+        <button class="skip" id="aForgot" type="button" hidden>Forgot your password?</button>
+        <p class="legal" id="aLegal">By creating an account you agree to our <a href="/privacy" target="_blank" rel="noopener">Privacy policy</a>.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- FREE PRACTICE ROUND (before signing up) -->
+  <section class="screen" id="practice" hidden>
+    <div class="ht-top"><span class="label wl-ptag">Free practice round</span><button class="skip" id="pQuit" type="button">Quit</button></div>
+    <div id="pIntro" class="center"><span class="label">Your category</span><div class="flash" id="pFlash"></div><div class="count" id="pCount">3</div></div>
+    <div id="pRound" class="wl-pround" hidden>
+      <div class="hud">
+        <div class="side you"><span class="who">You</span><span class="sc" id="pYou">0</span></div>
+        <div class="clock num" id="pClock">15</div>
+        <div class="side opp r"><span class="who">Rival</span><span class="sc" id="pOpp">0</span></div>
       </div>
-      <div class="field">
-        <label for="aPass">Password</label>
-        <input id="aPass" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+      <div class="timer"><i id="pBar"></i></div>
+      <div class="cathead"><span class="label">Practice round</span><h2 id="pCat"></h2></div>
+      <form class="entry" id="pForm" autocomplete="off"><input id="pInput" type="text" placeholder="Type an answer, press Enter" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" aria-label="Your answer"></form>
+      <div class="fb" id="pFb" aria-live="polite"></div>
+      <div class="chips" id="pChips"></div>
+    </div>
+    <div id="pResult" class="wl-result" hidden>
+      <div class="banner big" id="prTitle"></div>
+      <div class="wl-vs">
+        <div class="side you"><span class="who">You</span><span class="sc" id="prYou"></span></div>
+        <span class="vstext">VS</span>
+        <div class="side opp"><span class="who">Rival</span><span class="sc" id="prOpp"></span></div>
       </div>
-      <p class="formerr" id="aErr" role="alert"></p>
-      <button class="btn btn-main" id="aSubmit" type="submit"><span id="aSubmitT">Create account</span><span class="arrow">›</span></button>
-      <button class="skip" id="aForgot" type="button" hidden>Forgot your password?</button>
-      <p class="legal" id="aLegal">By creating an account you agree to our <a href="/privacy" target="_blank" rel="noopener">Privacy policy</a>.</p>
-    </form>
+      <p class="sub" id="prLine"></p>
+      <div><span class="label" style="display:block;margin-bottom:8px">Some you missed</span><div class="chips wl-center" id="prMiss"></div></div>
+      <button class="btn btn-main" id="prJoin" type="button"><span>Create an account<small>Your first ranked match is waiting</small></span><span class="arrow">›</span></button>
+    </div>
   </section>
 
   <!-- FORGOT PASSWORD -->

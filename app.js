@@ -25,7 +25,11 @@ function shuffle(a,r=Math.random){a=a.slice();for(let i=a.length-1;i>0;i--){cons
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const sum = a => (a || []).reduce((x, y) => x + (Number(y) || 0), 0);
-function show(id){ for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== id; window.scrollTo(0,0); }
+function show(id){
+  for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== id;
+  window.scrollTo(0,0);
+  if (typeof onScreen === "function") onScreen(id);
+}
 function chip(text, cls = "", pct){
   const c = document.createElement("span"); c.className = "chip " + cls; c.textContent = text;
   if (pct != null){ const p = document.createElement("span"); p.className = "p"; p.textContent = pct + "%"; c.appendChild(p); }
@@ -157,6 +161,7 @@ function setMode(m){
   $("aErr").textContent = ""; $("aErr").className = "formerr";
   $("aForgot").hidden = m !== "in";
   $("aLegal").hidden = m !== "up";
+  $("wFormTitle").textContent = m === "up" ? "Join the game" : "Welcome back";
 }
 $("tabUp").onclick = () => setMode("up");
 $("tabIn").onclick = () => setMode("in");
@@ -242,6 +247,143 @@ $("delBtn").onclick = async () => {
     $("delBtn").disabled = false;
   }
 };
+
+/* ---------------- Welcome page ---------------- */
+// The looping demo only runs while the welcome screen is showing.
+let demoRun = 0;
+function onScreen(id){
+  if (id === "auth"){ startDemo(); loadLiveStats(); } else demoRun++;
+}
+const DEMO = [
+  {cat:"NFL Teams", you:["Cowboys","Packers","steelrs|Steelers","Bears","Chiefs","Eagles","Ravens"], opp:5},
+  {cat:"Pizza Toppings", you:["Pepperoni","Mushrooms","Sausage","pinapple|Pineapple","Olives","Bacon"], opp:4},
+  {cat:"U.S. States", you:["Texas","Florida","Ohio","Georgia","califronia|California","Maine","Utah"], opp:6}
+];
+async function startDemo(){
+  const my = ++demoRun; let n = 0;
+  const alive = () => my === demoRun;
+  const bumpEl = el => { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); };
+  while (alive()){
+    const sc = DEMO[n++ % DEMO.length];
+    $("wCat").textContent = sc.cat; $("wCat").classList.remove("slam"); void $("wCat").offsetWidth; $("wCat").classList.add("slam");
+    $("wRound").textContent = `Round ${1 + (n - 1) % 5} of 5`;
+    $("wYou").textContent = 0; $("wOpp").textContent = 0; $("wChips").innerHTML = ""; $("wFb").textContent = ""; $("wText").textContent = "";
+    const T = 9000, start = performance.now(); let you = 0, opp = 0, oi = 0; const hits = [];
+    const oppT = Array.from({length: sc.opp}, (_, k) => (k + 1) * T / (sc.opp + 1) + Math.random() * 400);
+    const tick = () => { if (!alive()) return; const el = performance.now() - start, left = Math.max(0, T - el);
+      $("wBar").style.transform = `scaleX(${left / T})`; const secs = Math.ceil(left / T * 15);
+      $("wClock").textContent = secs; $("wClock").classList.toggle("low", secs <= 3);
+      while (oi < oppT.length && oppT[oi] <= el){ oi++; opp++; $("wOpp").textContent = opp; bumpEl($("wOpp")); }
+      if (left > 0) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+    await wait(500);
+    for (const w of sc.you){
+      if (!alive()) return;
+      const [typed, fixed] = w.split("|");
+      $("wText").textContent = "";
+      for (const ch of typed){ if (!alive()) return; $("wText").textContent += ch; await wait(reduce ? 0 : 55 + Math.random() * 40); }
+      await wait(reduce ? 0 : 180);
+      you++; $("wYou").textContent = you; bumpEl($("wYou"));
+      $("wTyped").classList.add("ok"); setTimeout(() => $("wTyped").classList.remove("ok"), 250);
+      $("wFb").textContent = fixed ? `+1 · counted as ${fixed}` : "+1";
+      $("wChips").appendChild(chip(fixed || typed)); $("wText").textContent = "";
+      const now = performance.now(); hits.push(now);
+      if (!reduce && hits.filter(t => now - t < 3500).length === 3){ const c = document.createElement("div"); c.className = "combo"; c.textContent = "COMBO ×3"; $("wStage").parentNode.appendChild(c); setTimeout(() => c.remove(), 1000); }
+      if (performance.now() - start > T - 600) break;
+      await wait(reduce ? 300 : 350 + Math.random() * 300);
+    }
+    const rest = T - (performance.now() - start); if (rest > 0) await wait(rest);
+    if (!alive()) return;
+    $("wFb").textContent = you > opp ? `Round won ${you}–${opp}` : `Round lost ${you}–${opp}`;
+    await wait(1800);
+  }
+}
+// "138 players today · top score 47": only shown once the game looks busy.
+let liveLoaded = 0;
+async function loadLiveStats(){
+  if (Date.now() - liveLoaded < 60000) return; liveLoaded = Date.now();
+  try {
+    const st = await rpc("public_today_stats");
+    if (!st || st.players < 5){ $("wLive").hidden = true; return; }
+    $("wPlayers").textContent = fmt(st.players); $("wTopN").textContent = st.top; $("wLive").hidden = false;
+  } catch (e){ $("wLive").hidden = true; }
+}
+TIERS.forEach(t => { const d = document.createElement("div"); d.className = "wl-tier"; const i = document.createElement("i"); i.style.background = t.c; d.append(i, t.n.length > 7 ? t.n.slice(0, 4) + "." : t.n); d.title = t.n; $("wTiers").appendChild(d); });
+function goForm(m){
+  setMode(m); $("wForm").scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+  setTimeout(() => $(m === "up" ? "aUser" : "aEmail").focus({ preventScroll: true }), 450);
+}
+$("wToForm").onclick = () => goForm("up");
+$("wToLogin").onclick = () => goForm("in");
+
+/* One free practice round per device, from a category that isn't in today's set. */
+const PRACTICE_KEY = "c5_practice_done";
+const practiceUsed = () => { try { return localStorage.getItem(PRACTICE_KEY) === "1"; } catch (e){ return false; } };
+function lockTry(){
+  try { localStorage.setItem(PRACTICE_KEY, "1"); } catch (e) {}
+  $("wTry").innerHTML = '<span>You played your free round<small>Create an account to keep playing</small></span><span class="arrow">›</span>';
+  $("wTry").onclick = () => goForm("up");
+}
+if (practiceUsed()) lockTry(); else $("wTry").onclick = () => startPractice();
+const localGameDay = () => new Intl.DateTimeFormat("en-CA", { timeZone: GAME_TZ }).format(new Date());
+let PR = null;
+function pShow(id){ ["pIntro","pRound","pResult"].forEach(x => $(x).hidden = x !== id); }
+async function startPractice(){
+  const day = localGameDay(), today = new Set(dailyCats(day).map(c => c.id));
+  const pool = CATS.filter(c => (!c.from || c.from <= day) && !today.has(c.id) && c.entries.length >= 20);
+  const cat = pool[Math.floor(Math.random() * pool.length)];
+  PR = { cat, found: new Set(), done: false };
+  show("practice"); pShow("pIntro");
+  $("pFlash").textContent = cat.name; $("pFlash").style.animation = "none"; void $("pFlash").offsetWidth; $("pFlash").style.animation = "";
+  for (const n of [3, 2, 1]){
+    const c = $("pCount"); c.textContent = n; c.classList.remove("pop"); void c.offsetWidth; c.classList.add("pop");
+    await wait(reduce ? 400 : 750); if (!PR) return;
+  }
+  practiceRound();
+}
+function practiceRound(){
+  const cat = PR.cat; pShow("pRound");
+  $("pCat").textContent = cat.name; $("pYou").textContent = 0; $("pOpp").textContent = 0; $("pChips").innerHTML = ""; $("pFb").textContent = ""; $("pFb").className = "fb";
+  const input = $("pInput"); input.value = ""; setTimeout(() => input.focus(), 30);
+  const k = Math.min(cat.entries.length, 4 + Math.floor(Math.random() * 4));   // a beatable rival: 4–7
+  const oppT = Array.from({length: k}, () => 800 + Math.random() * (ROUND_MS - 1500)).sort((a, b) => a - b);
+  const start = performance.now(); let shown = 0; PR.opp = k;
+  const bumpEl = el => { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); };
+  $("pForm").onsubmit = ev => {
+    ev.preventDefault(); if (!PR || PR.done) return;
+    const v = input.value.trim(); if (!v) return; input.value = "";
+    const idx = matchAnswer(cat, v), fb = $("pFb");
+    const shake = () => { const f = $("pForm"); f.classList.remove("shake"); void f.offsetWidth; f.classList.add("shake"); };
+    if (idx < 0){ fb.className = "fb bad"; fb.textContent = `“${v}” doesn't count`; shake(); return; }
+    if (PR.found.has(idx)){ fb.className = "fb dupe"; fb.textContent = `Already got ${cat.byIdx[idx].show}`; shake(); return; }
+    PR.found.add(idx); const e = cat.byIdx[idx];
+    fb.className = "fb good"; fb.textContent = e.forms.includes(norm(v)) ? "+1" : `+1 · counted as ${e.show}`;
+    $("pChips").appendChild(chip(e.show)); $("pYou").textContent = PR.found.size; bumpEl($("pYou"));
+  };
+  const tick = () => { if (!PR || PR.done) return;
+    const el = performance.now() - start, left = Math.max(0, ROUND_MS - el);
+    $("pBar").style.transform = `scaleX(${left / ROUND_MS})`;
+    const secs = Math.ceil(left / 1000), c = $("pClock"); c.textContent = secs; c.classList.toggle("low", secs <= 3 && left > 0);
+    const due = oppT.filter(t => t <= el).length; if (due !== shown){ shown = due; $("pOpp").textContent = due; bumpEl($("pOpp")); }
+    if (left <= 0) return practiceDone();
+    requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function practiceDone(){
+  PR.done = true; $("pInput").blur(); lockTry();
+  const y = PR.found.size, o = PR.opp, d = y - o; pShow("pResult");
+  const h = $("prTitle"); h.className = "banner big " + (d > 0 ? "w" : d < 0 ? "l" : "t");
+  h.textContent = d > 0 ? "You'd have won!" : d < 0 ? "So close!" : "Dead even!";
+  $("prYou").textContent = y; $("prOpp").textContent = o;
+  $("prLine").textContent = d > 0 ? `You named ${y} in 15 seconds. In a ranked match that's a win and rating points.`
+    : d < 0 ? `You named ${y}. Ranked matches pair you with players near your level, so every game is close.`
+    : `${y} each. In a ranked match, a draw still moves your rating.`;
+  const m = $("prMiss"); m.innerHTML = "";
+  PR.cat.entries.filter(e => !PR.found.has(e.idx)).slice(0, 8).forEach(e => m.appendChild(chip(e.show, "o")));
+  if (y > o) confetti(140);
+}
+$("prJoin").onclick = () => { PR = null; show("auth"); goForm("up"); };
+$("pQuit").onclick = () => { PR = null; show("auth"); };
 
 /* ---------------- Password reset ---------------- */
 $("aForgot").onclick = () => { $("fEmail").value = $("aEmail").value.trim(); $("fpMsg").textContent = ""; show("forgot"); };
