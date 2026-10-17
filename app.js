@@ -271,7 +271,7 @@ async function boot(){
     await loadState();
     // An unfinished match from this session means you left: that's a forfeit.
     if (RUN && RUN.status === "pending" && !M){ await rpc("forfeit_pending"); await loadState(); }
-    renderHome();
+    if (ME.wins + ME.losses + ME.draws === 0 && !RUN && !seenHowto()) openHowto(); else renderHome();
   } catch (e){
     $("loadMsg").textContent = "Couldn't reach the game server. Refresh to try again.";
     console.error(e);
@@ -677,6 +677,45 @@ $("fHome").onclick = async () => { M = null; try { await loadState(); } catch (e
 /* ---------------- Owner stats ---------------- */
 let stDay = null, stToken = 0;
 $("openStats").onclick = () => openStats(DAY);
+
+/* ---------------- How to play ---------------- */
+const HT_KEY = "c5_howto_seen";
+function seenHowto(){ try { return localStorage.getItem(HT_KEY) === "1"; } catch (e){ return false; } }
+function markHowto(){ try { localStorage.setItem(HT_KEY, "1"); } catch (e){} }
+let htIdx = 0;
+const htCards = () => $("htTrack").children;
+function htGo(i){
+  const n = htCards().length; htIdx = Math.max(0, Math.min(n - 1, i));
+  $("htTrack").scrollTo({ left: htIdx * $("htTrack").clientWidth, behavior: reduce ? "auto" : "smooth" });
+  htSync();
+}
+function htSync(){
+  const n = htCards().length, last = htIdx === n - 1;
+  $("htStep").textContent = `${htIdx + 1} of ${n}`;
+  [...$("htDots").children].forEach((d, k) => d.classList.toggle("on", k === htIdx));
+  $("htBack").disabled = htIdx === 0;
+  $("htNextT").textContent = last ? "Got it" : "Next";
+}
+function openHowto(){
+  $("htTiers").innerHTML = "";
+  TIERS.forEach(t => { const d = document.createElement("span"); d.className = "ht-tier"; const i = document.createElement("i"); i.style.background = t.c; d.append(i, t.n); $("htTiers").appendChild(d); });
+  $("htDrop").textContent = new Date(Date.now() + secsToDrop() * 1000).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"}) + " your time";
+  show("howto"); htIdx = 0; $("htTrack").scrollLeft = 0; htSync();
+}
+function closeHowto(){
+  markHowto();
+  renderHome();
+}
+$("openHowto").onclick = openHowto;
+$("htSkip").onclick = closeHowto;
+$("htBack").onclick = () => htGo(htIdx - 1);
+$("htNext").onclick = () => {
+  if (htIdx < htCards().length - 1) return htGo(htIdx + 1);
+  closeHowto();
+};
+// Swiping also moves between cards.
+let htScrollT;
+$("htTrack").addEventListener("scroll", () => { clearTimeout(htScrollT); htScrollT = setTimeout(() => { htIdx = Math.round($("htTrack").scrollLeft / $("htTrack").clientWidth); htSync(); }, 80); });
 
 /* ---------------- Leaderboard ---------------- */
 let LB = null, lbTab = "all";

@@ -250,3 +250,47 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .lbrow .rec{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;min-width:5ch}
 .lbrow .rec.w{color:var(--good)} .lbrow .rec.l{color:var(--opp)} .lbrow .rec.t{color:var(--bulb)}
 .authform .skip{padding:4px}
+
+/* ---------- How to play ---------- */
+.ht-top{display:flex;justify-content:space-between;align-items:center}
+.ht-top .skip{padding:0;font-size:14px}
+.skip.inline{display:inline;padding:0;font-size:12px;align-self:auto}
+.ht-track{display:grid;grid-auto-flow:column;grid-auto-columns:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:0}
+.ht-track::-webkit-scrollbar{display:none}
+.ht-card{scroll-snap-align:start;display:flex;flex-direction:column;gap:14px;padding:2px}
+.ht-card h2{font-family:var(--display);font-weight:400;font-size:clamp(26px,8vw,36px);line-height:1.05}
+.ht-card p{margin:0;color:var(--muted);font-size:17px;max-width:34ch}
+.ht-art{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 18px;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;overflow:hidden}
+.ht-flash{font-family:var(--display);font-size:clamp(28px,8.5vw,40px);color:var(--bulb);line-height:1;text-shadow:0 0 26px rgba(255,201,60,.4)}
+.ht-timer{width:85%;height:10px;background:var(--bg2);border-radius:99px;overflow:hidden}
+.ht-timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--bulb),#ffe08a);border-radius:99px;transform-origin:left;animation:htdrain 4s linear infinite}
+@keyframes htdrain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.ht-clock{font-size:26px;font-weight:700}
+.ht-input{width:100%;text-align:left;font-size:20px;font-weight:700;padding:12px 14px;border-radius:10px;border:2px solid var(--good);background:var(--bg2)}
+.ht-caret{display:inline-block;width:2px;height:1.1em;background:var(--fg);vertical-align:-3px;margin-left:2px;animation:blink 1s steps(2) infinite}
+.ht-fb{color:var(--good);font-weight:800}
+.ht-chips{justify-content:center;min-height:0}
+.ht-hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;width:100%}
+.ht-hud .side{display:flex;flex-direction:column;align-items:flex-start}
+.ht-hud .side.r{align-items:flex-end}
+.ht-hud .who{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.ht-hud .sc{font-family:var(--display);font-size:56px;line-height:1}
+.ht-hud .you .who,.ht-hud .you .sc{color:var(--you)} .ht-hud .opp .who,.ht-hud .opp .sc{color:var(--opp)}
+.ht-delta{font-weight:800;color:var(--muted)} .ht-delta .up{font-family:var(--display);font-weight:400;color:var(--good);font-size:26px;margin-right:4px}
+.ht-tiers{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.ht-tier{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ht-tier i{width:34px;height:34px;border-radius:50%;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18)}
+.ht-once{font-weight:800;color:var(--muted)} .ht-once b{font-family:var(--display);font-weight:400;color:var(--bulb);font-size:30px;margin-right:6px;vertical-align:-3px}
+.ht-dots{display:flex;justify-content:center;gap:8px}
+.ht-dots i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:width .2s,background .2s}
+.ht-dots i.on{width:22px;background:var(--bulb)}
+.ht-nav{display:grid;grid-template-columns:auto 1fr;gap:10px}
+.ht-nav #htBack{gap:8px}
+.ht-nav #htBack[disabled]{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.ht-timer i,.ht-caret{animation:none}}
+/* Arrows read better in the body face than in the display face */
+.btn .arrow{font-family:var(--body);font-weight:800;font-size:24px;line-height:1}
+.ht-tiers{display:grid;grid-template-columns:repeat(3,auto);justify-content:center;gap:12px 22px}
+.ht-nav{display:flex;gap:10px}
+.ht-nav #htNext{flex:1}
+.ht-nav #htBack[disabled]{display:none}

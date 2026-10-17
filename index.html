@@ -132,7 +132,63 @@
     </ul>
     <button class="btn btn-alt" id="openLeaders"><span>Leaderboard<small id="lbTeaser">Top players and today's best scores</small></span><span class="arrow">›</span></button>
     <button class="btn btn-alt" id="openStats" hidden><span>Owner stats<small>Players, scores and top answers by day · only you see this</small></span><span class="arrow">›</span></button>
-    <p class="foot" id="foot">New set every day at <span id="dropTime">midnight ET</span></p>
+    <p class="foot" id="foot">New set every day at <span id="dropTime">midnight ET</span> · <button class="skip inline" id="openHowto" type="button">How to play</button></p>
+  </section>
+
+  <!-- HOW TO PLAY -->
+  <section class="screen" id="howto" hidden>
+    <div class="ht-top"><span class="label" id="htStep">1 of 4</span><button class="skip" id="htSkip" type="button">Skip</button></div>
+    <div class="ht-track" id="htTrack">
+
+      <article class="ht-card">
+        <div class="ht-art">
+          <div class="label">Round 1 of 5</div>
+          <div class="ht-flash">NFL Teams</div>
+          <div class="ht-timer"><i></i></div>
+          <div class="ht-clock num">15</div>
+        </div>
+        <h2>5 categories.<br>15 seconds each.</h2>
+        <p>Each round flashes a new category. You won't know what's coming until it appears.</p>
+      </article>
+
+      <article class="ht-card">
+        <div class="ht-art">
+          <div class="ht-input">steelrs<span class="ht-caret"></span></div>
+          <div class="ht-fb">+1 · counted as Steelers</div>
+          <div class="chips ht-chips"><span class="chip">Cowboys</span><span class="chip">Packers</span><span class="chip">Bears</span><span class="chip">Steelers</span></div>
+        </div>
+        <h2>Name as many<br>as you can.</h2>
+        <p>Type an answer and hit Enter. Every right answer is 1 point, and close spellings count. Speed beats perfection.</p>
+      </article>
+
+      <article class="ht-card">
+        <div class="ht-art">
+          <div class="ht-hud">
+            <div class="side you"><span class="who">You</span><span class="sc">9</span></div>
+            <div class="vstext">VS</div>
+            <div class="side opp r"><span class="who">jake</span><span class="sc">7</span></div>
+          </div>
+          <div class="ht-delta"><span class="up">+18</span> rating</div>
+        </div>
+        <h2>Beat your rival.</h2>
+        <p>You face a real player's run from today, near your rating, and watch their score climb live. Win by more, climb faster.</p>
+      </article>
+
+      <article class="ht-card">
+        <div class="ht-art">
+          <div class="ht-tiers" id="htTiers"></div>
+          <div class="ht-once"><b>1</b> match a day</div>
+        </div>
+        <h2>One shot a day.</h2>
+        <p>Everyone gets the same 5 categories. A new set drops at <span id="htDrop">midnight ET</span>. Leaving mid-match counts as a loss.</p>
+      </article>
+
+    </div>
+    <div class="ht-dots" id="htDots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="ht-nav">
+      <button class="btn btn-alt" id="htBack" type="button"><span class="arrow">‹</span><span>Back</span></button>
+      <button class="btn btn-main" id="htNext" type="button"><span id="htNextT">Next</span><span class="arrow">›</span></button>
+    </div>
   </section>
 
   <!-- LEADERBOARD -->
