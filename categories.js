@@ -1,0 +1,68 @@
+/* Daily 5 — categories and answer matching.
+
+   HOW TO EDIT A CATEGORY
+   Each category is [id, "Display name", difficulty, "answer,answer,..."].
+   Alternate spellings or names for one answer go together with "|",
+   e.g. "Farfalle|bowtie|bow tie". The first name is the one shown.
+
+   IMPORTANT: answers are saved by their position in the list.
+   Only ever ADD new answers to the END of a list, and add new
+   categories to the END of RAW. Reordering or deleting breaks the
+   answer stats for days that were already played.
+*/
+const RAW = [
+ ["pasta","Pasta Shapes & Dishes",1.0,"Spaghetti,Penne,Rigatoni,Fettuccine|fettucine,Linguine,Lasagna|lasagne,Macaroni,Ravioli,Tortellini,Farfalle|bowtie|bow tie|bowties,Fusilli,Rotini,Orzo,Gnocchi,Ziti|baked ziti,Mac and Cheese|macaroni and cheese|mac n cheese,Carbonara|spaghetti carbonara,Bolognese|spaghetti bolognese,Alfredo|fettuccine alfredo,Cannelloni,Manicotti,Angel Hair|capellini,Shells|conchiglie|stuffed shells,Orecchiette,Pappardelle,Tagliatelle,Bucatini,Vermicelli,Cacio e Pepe,Penne alla Vodka|vodka pasta|vodka,Pesto,Primavera|pasta primavera,Amatriciana,Puttanesca,Arrabbiata|penne arrabbiata,Aglio e Olio,Cavatelli,Ditalini,Gemelli,Campanelle,Radiatori,Rotelle|wagon wheels,Paccheri,Tortelloni,Agnolotti,Mafaldine|mafalde,Trofie,Strozzapreti,Cappelletti,Stelline,Acini di Pepe,Pastitsio,Vongole|spaghetti alle vongole,Frutti di Mare,Spaghetti and Meatballs,Pasta e Fagioli,Ragu,Pastina,Fregola,Casarecce,Lumache,Cavatappi,Elbow|elbow macaroni"],
+ ["elements","Elements on the Periodic Table",0.85,"Hydrogen,Helium,Oxygen,Carbon,Nitrogen,Gold,Silver,Iron,Copper,Sodium,Lithium,Neon,Calcium,Potassium,Magnesium,Aluminum|aluminium,Zinc,Lead,Mercury,Uranium,Chlorine,Fluorine,Sulfur|sulphur,Phosphorus,Silicon,Platinum,Titanium,Nickel,Tin,Iodine,Argon,Plutonium,Cobalt,Boron,Beryllium,Krypton,Xenon,Radon,Bromine,Chromium,Manganese,Tungsten,Arsenic,Radium,Cesium|caesium,Barium,Strontium,Scandium,Vanadium,Gallium,Germanium,Selenium,Rubidium,Yttrium,Zirconium,Niobium,Molybdenum,Technetium,Ruthenium,Rhodium,Palladium,Cadmium,Indium,Antimony,Tellurium,Lanthanum,Cerium,Praseodymium,Neodymium,Promethium,Samarium,Europium,Gadolinium,Terbium,Dysprosium,Holmium,Erbium,Thulium,Ytterbium,Lutetium,Hafnium,Tantalum,Rhenium,Osmium,Iridium,Thallium,Bismuth,Polonium,Astatine,Francium,Actinium,Thorium,Protactinium,Neptunium,Americium,Curium,Berkelium,Californium,Einsteinium,Fermium,Mendelevium,Nobelium,Lawrencium,Rutherfordium,Dubnium,Seaborgium,Bohrium,Hassium,Meitnerium,Darmstadtium,Roentgenium,Copernicium,Nihonium,Flerovium,Moscovium,Livermorium,Tennessine,Oganesson"],
+ ["mlb","MLB Teams",1.05,"Yankees|new york yankees|ny yankees,Red Sox|boston red sox,Dodgers|los angeles dodgers|la dodgers,Cubs|chicago cubs,Mets|new york mets,Giants|san francisco giants|sf giants,Cardinals|st louis cardinals|cards,Braves|atlanta braves,Astros|houston astros,Phillies|philadelphia phillies,Blue Jays|toronto blue jays|jays,Orioles|baltimore orioles|os,Rays|tampa bay rays,Guardians|cleveland guardians,Tigers|detroit tigers,Twins|minnesota twins,White Sox|chicago white sox,Royals|kansas city royals,Mariners|seattle mariners,Rangers|texas rangers,Angels|los angeles angels|la angels,Athletics|as|oakland athletics,Padres|san diego padres,Diamondbacks|dbacks|arizona diamondbacks,Rockies|colorado rockies,Reds|cincinnati reds,Brewers|milwaukee brewers,Pirates|pittsburgh pirates,Marlins|miami marlins,Nationals|nats|washington nationals"],
+ ["nfl","NFL Teams",1.05,"Cowboys|dallas cowboys,Patriots|pats|new england patriots,Packers|green bay packers,Chiefs|kansas city chiefs,Eagles|philadelphia eagles,Steelers|pittsburgh steelers,49ers|niners|san francisco 49ers|fortyniners,Bears|chicago bears,Giants|new york giants,Jets|new york jets,Bills|buffalo bills,Dolphins|miami dolphins,Ravens|baltimore ravens,Bengals|cincinnati bengals,Browns|cleveland browns,Broncos|denver broncos,Raiders|las vegas raiders,Chargers|los angeles chargers,Rams|los angeles rams,Seahawks|seattle seahawks,Cardinals|arizona cardinals,Falcons|atlanta falcons,Panthers|carolina panthers,Saints|new orleans saints,Buccaneers|bucs|tampa bay buccaneers,Lions|detroit lions,Vikings|minnesota vikings,Texans|houston texans,Colts|indianapolis colts,Jaguars|jags|jacksonville jaguars,Titans|tennessee titans,Commanders|washington commanders"],
+ ["nba","NBA Teams",1.05,"Lakers|los angeles lakers,Celtics|boston celtics,Bulls|chicago bulls,Warriors|golden state warriors|dubs,Heat|miami heat,Knicks|new york knicks,Nets|brooklyn nets,76ers|sixers|philadelphia 76ers,Spurs|san antonio spurs,Mavericks|mavs|dallas mavericks,Rockets|houston rockets,Suns|phoenix suns,Bucks|milwaukee bucks,Nuggets|denver nuggets,Clippers|los angeles clippers,Cavaliers|cavs|cleveland cavaliers,Thunder|okc|oklahoma city thunder,Hawks|atlanta hawks,Hornets|charlotte hornets,Pistons|detroit pistons,Pacers|indiana pacers,Grizzlies|memphis grizzlies,Timberwolves|wolves|minnesota timberwolves,Pelicans|new orleans pelicans,Magic|orlando magic,Trail Blazers|blazers|portland trail blazers,Kings|sacramento kings,Raptors|toronto raptors,Jazz|utah jazz,Wizards|washington wizards"],
+ ["states","U.S. States",1.15,"California,Texas,Florida,New York,Alaska,Hawaii,Ohio,Georgia,Washington,Michigan,Illinois,Pennsylvania,Arizona,Nevada,Colorado,Oregon,Utah,North Carolina,South Carolina,Virginia,West Virginia,Tennessee,Kentucky,Alabama,Mississippi,Louisiana,Arkansas,Missouri,Iowa,Minnesota,Wisconsin,Indiana,Kansas,Nebraska,Oklahoma,North Dakota,South Dakota,Montana,Wyoming,Idaho,New Mexico,Maine,Vermont,New Hampshire,Massachusetts,Connecticut,Rhode Island,New Jersey,Delaware,Maryland"],
+ ["europe","Countries in Europe",1.0,"France,Germany,Italy,Spain,Portugal,United Kingdom|uk|great britain|britain,England,Scotland,Wales,Ireland,Netherlands|holland,Belgium,Switzerland,Austria,Poland,Greece,Sweden,Norway,Denmark,Finland,Iceland,Russia,Ukraine,Czech Republic|czechia,Hungary,Croatia,Romania,Bulgaria,Serbia,Slovakia,Slovenia,Luxembourg,Monaco,Malta,Cyprus,Turkey|turkiye,Estonia,Latvia,Lithuania,Belarus,Moldova,Albania,Montenegro,Bosnia and Herzegovina|bosnia,North Macedonia|macedonia,Kosovo,Andorra,Liechtenstein,San Marino,Vatican City|vatican"],
+ ["cars","Car Brands",1.05,"Toyota,Honda,Ford,Chevrolet|chevy,BMW,Mercedes|mercedes benz|benz,Audi,Volkswagen|vw,Tesla,Nissan,Hyundai,Kia,Subaru,Mazda,Jeep,Dodge,Ram,Lexus,Porsche,Ferrari,Lamborghini|lambo,Maserati,Bentley,Rolls-Royce,Aston Martin,Jaguar,Land Rover|range rover,Volvo,Cadillac,Buick,GMC,Lincoln,Chrysler,Acura,Infiniti,Mitsubishi,Fiat,Alfa Romeo,Mini,Genesis,Rivian,Lucid,Bugatti,McLaren,Lotus,Peugeot,Renault,Citroen,Skoda,Seat,Opel,Suzuki,Polestar,Pontiac,Saturn,Hummer,Koenigsegg,Pagani,Smart,Saab,Plymouth,Oldsmobile,Mercury,Datsun,Isuzu,Scion,BYD,Lancia,Dacia"],
+ ["fruits","Fruits",1.2,"Apple,Banana,Orange,Strawberry,Grape,Blueberry,Raspberry,Blackberry,Watermelon,Cantaloupe,Honeydew,Pineapple,Mango,Peach,Pear,Plum,Cherry,Kiwi,Lemon,Lime,Grapefruit,Apricot,Nectarine,Pomegranate,Papaya,Coconut,Fig,Date,Guava,Passion Fruit,Lychee|litchi,Dragon Fruit,Persimmon,Cranberry,Tangerine,Clementine,Mandarin,Starfruit|star fruit,Avocado,Tomato,Plantain,Jackfruit,Durian,Kumquat,Quince,Gooseberry,Elderberry,Mulberry,Boysenberry,Currant,Olive,Acai,Rambutan,Mangosteen,Yuzu,Melon,Blood Orange,Huckleberry"],
+ ["dogs","Dog Breeds",1.0,"Labrador|lab|labrador retriever,Golden Retriever|golden,German Shepherd,Bulldog|english bulldog,Poodle,Beagle,Rottweiler,Dachshund|wiener dog,Yorkshire Terrier|yorkie,Boxer,Husky|siberian husky,Chihuahua,Pug,Great Dane,Doberman,Shih Tzu,Corgi,Australian Shepherd|aussie,Border Collie,Pomeranian,French Bulldog|frenchie,Cocker Spaniel,Shiba Inu,Bernese Mountain Dog,Cavalier King Charles|cavalier,Maltese,Boston Terrier,Havanese,Bichon Frise|bichon,Saint Bernard,Newfoundland,Mastiff,Greyhound,Whippet,Dalmatian,Akita,Malamute|alaskan malamute,Samoyed,Weimaraner,Vizsla,Pit Bull|pitbull,Jack Russell,Schnauzer,Basset Hound,Bloodhound,Collie,Sheltie|shetland sheepdog,Westie,Scottish Terrier|scottie,Irish Setter,Chow Chow,Shar Pei,Papillon,Bull Terrier,Cane Corso,Goldendoodle,Labradoodle,Borzoi,Afghan Hound,Rhodesian Ridgeback,Pointer,Airedale,Pekingese,Lhasa Apso"],
+ ["fastfood","Fast Food Chains",1.05,"McDonald's,Burger King,Wendy's,Taco Bell,KFC,Subway,Chick-fil-A,Chipotle,Popeyes,Sonic,Arby's,Jack in the Box,Five Guys,In-N-Out,Shake Shack,Whataburger,Domino's,Pizza Hut,Papa John's,Little Caesars,Dairy Queen|dq,Panda Express,Panera,Wingstop,Raising Cane's|canes,Culver's,Carl's Jr,Hardee's,Del Taco,Jimmy John's,Jersey Mike's,Firehouse Subs,Zaxby's,Bojangles,Church's Chicken|churchs,White Castle,Krystal,Checkers,Rally's,Steak n Shake,Qdoba,Moe's,El Pollo Loco,Long John Silver's,Dunkin|dunkin donuts,Starbucks,Tim Hortons,Krispy Kreme,Cook Out,Sweetgreen,Cava,Smashburger,Freddy's,Jollibee,Portillo's,Potbelly"],
+ ["instruments","Musical Instruments",1.0,"Piano,Guitar,Drums,Violin,Cello,Bass|bass guitar|double bass|upright bass,Trumpet,Trombone,Saxophone|sax,Flute,Clarinet,Oboe,Bassoon,Tuba,French Horn,Harp,Ukulele|uke,Banjo,Mandolin,Harmonica,Accordion,Xylophone,Marimba,Vibraphone,Timpani,Triangle,Tambourine,Cymbal,Viola,Piccolo,Bagpipes,Organ,Keyboard,Synthesizer|synth,Bongos,Congas,Cowbell,Recorder,Sitar,Didgeridoo,Glockenspiel,Harpsichord,Kazoo,Bugle,Cornet,Euphonium,Lute,Steel Drum|steel pan,Maracas,Castanets,Snare Drum|snare,Gong,Theremin,Dulcimer,Zither,Cajon"],
+ ["cheese","Cheeses",0.95,"Cheddar,Mozzarella,Parmesan|parmigiano|parmigiano reggiano,Swiss,Provolone,Brie,Camembert,Gouda,Feta,Ricotta,Blue Cheese|blue|bleu,Gorgonzola,Roquefort,Stilton,Monterey Jack,Pepper Jack,Colby,Colby Jack,American,Gruyere,Havarti,Manchego,Pecorino|pecorino romano,Asiago,Fontina,Burrata,Mascarpone,Cottage Cheese,Cream Cheese,Halloumi,Paneer,Queso Fresco,Cotija,Muenster,Limburger,Jarlsberg,Edam,Emmental,Taleggio,Boursin,Goat Cheese|chevre,Comte,Raclette,String Cheese,Oaxaca,Stracciatella,Romano,Wensleydale"],
+ ["olympics","Olympic Sports",1.0,"Swimming,Track and Field|track|athletics,Gymnastics,Basketball,Soccer|football,Tennis,Volleyball,Beach Volleyball,Boxing,Wrestling,Judo,Taekwondo,Fencing,Rowing,Canoeing|canoe|kayaking|kayak,Cycling,BMX,Mountain Biking,Diving,Water Polo,Archery,Shooting,Weightlifting,Equestrian|horse riding,Sailing,Triathlon,Golf,Rugby,Field Hockey,Handball,Table Tennis|ping pong,Badminton,Surfing,Skateboarding,Climbing|sport climbing,Breaking|breakdancing,Modern Pentathlon,Artistic Swimming|synchronized swimming,Trampoline,Baseball,Softball,Karate,Marathon,Ice Hockey|hockey,Figure Skating,Speed Skating,Curling,Skiing|alpine skiing,Snowboarding,Biathlon,Bobsled|bobsleigh,Luge,Skeleton,Ski Jumping,Cross-Country Skiing,Freestyle Skiing,Nordic Combined,Decathlon,Heptathlon,Pole Vault,Long Jump,High Jump,Javelin,Shot Put,Discus,Hurdles"],
+ ["golf","Golf Terms",0.95,"Birdie,Eagle,Bogey,Par,Albatross|double eagle,Hole in One|ace,Double Bogey,Mulligan,Fairway,Green,Bunker|sand trap,Rough,Tee,Driver,Putter,Wedge,Iron,Wood,Hybrid,Putt,Chip,Pitch,Drive,Slice,Hook,Draw,Fade,Shank,Divot,Fore,Handicap,Caddie|caddy,Dogleg,Links,Scramble,Yips,Fringe,Lie,Gimme,Pin|flagstick,Cup,Hazard,Water Hazard,Out of Bounds|ob,Approach,Backswing,Follow Through,Grip,Stance,Tee Box,Clubhouse,Birdie Putt,Lag,Break,Bump and Run,Flop Shot,Stroke,Skins,Best Ball,Match Play,Stroke Play,Sand Wedge,Pitching Wedge,Lob Wedge"],
+ ["veg","Vegetables",1.15,"Carrot,Broccoli,Spinach,Lettuce,Cabbage,Potato,Onion,Garlic,Celery,Cucumber,Bell Pepper|pepper,Zucchini,Squash,Eggplant,Cauliflower,Kale,Asparagus,Peas|pea,Green Beans|green bean,Corn,Beet|beets,Radish,Turnip,Sweet Potato,Artichoke,Brussels Sprouts|brussel sprouts,Leek,Mushroom,Okra,Pumpkin,Arugula,Bok Choy,Collard Greens|collards,Swiss Chard|chard,Parsnip,Rutabaga,Shallot,Scallion|green onion,Jalapeno,Edamame,Fennel,Kohlrabi,Watercress,Yam,Endive,Radicchio,Jicama,Tomato,Butternut Squash,Snap Peas,Romaine"]
+];
+
+function norm(s){return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/&/g,"and").replace(/[^a-z0-9]/g,"");}
+const CATS = RAW.map(([id,name,diff,list])=>{
+  const entries = list.split(",").map(e=>{const forms=e.split("|");return {show:forms[0],forms:forms.map(norm).filter(Boolean)};});
+  return {id,name,diff,entries};
+});
+
+function lev(a,b,max){
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  // Edit distance where swapping two neighbouring letters ("yrok") counts as one typo.
+  let pp=null, prev=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    const cur=[i]; let rowMin=i;
+    for(let j=1;j<=b.length;j++){
+      cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(pp&&i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) cur[j]=Math.min(cur[j],pp[j-2]+1);
+      if(cur[j]<rowMin) rowMin=cur[j];
+    }
+    if(rowMin>max) return max+1;
+    pp=prev; prev=cur;
+  }
+  return prev[b.length];
+}
+// Returns entry index or -1. Exact & plural first, then forgiving spelling.
+function matchAnswer(cat,input){
+  const n=norm(input); if(!n) return -1;
+  const variants=[n]; if(n.endsWith("es")) variants.push(n.slice(0,-2)); if(n.endsWith("s")) variants.push(n.slice(0,-1)); variants.push(n+"s");
+  for(let i=0;i<cat.entries.length;i++) for(const f of cat.entries[i].forms) if(variants.includes(f)) return i;
+  const tol = n.length<=4?0 : n.length<=7?1 : 2;
+  if(!tol) return -1;
+  let best=-1,bd=tol+1;
+  for(let i=0;i<cat.entries.length;i++) for(const f of cat.entries[i].forms){
+    if(f.length<=3) continue;
+    const d=lev(n,f,tol); if(d<bd){bd=d;best=i;}
+  }
+  return best;
+}
+

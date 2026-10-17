@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Daily 5</title>
+<meta name="description" content="Five categories. 15 seconds each. Name as many as you can and outscore your opponent. One ranked match a day.">
+<meta property="og:title" content="Daily 5">
+<meta property="og:description" content="Five categories. 15 seconds each. One ranked match a day.">
+<meta name="theme-color" content="#0d1626">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1626'/%3E%3Ctext x='32' y='48' font-family='Arial Black,Impact,sans-serif' font-size='44' text-anchor='middle' fill='%23ffc93c'%3E5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+<main class="wrap" id="app">
+
+  <!-- LOADING -->
+  <section class="screen" id="loading">
+    <div class="center"><div class="logo" aria-label="Daily 5">DAILY <span class="five">5</span></div><p class="tag" id="loadMsg">Loading…</p></div>
+  </section>
+
+  <!-- SIGN UP / LOG IN -->
+  <section class="screen" id="auth" hidden>
+    <div>
+      <div class="logo" aria-label="Daily 5">DAILY <span class="five">5</span></div>
+      <p class="tag">Five categories. 15 seconds each. Name as many as you can and outscore your opponent. One ranked match a day.</p>
+    </div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tabUp" aria-selected="true">Create account</button>
+      <button type="button" role="tab" id="tabIn" aria-selected="false">Log in</button>
+    </div>
+    <form id="authForm" class="authform" novalidate>
+      <div class="field" id="fUser">
+        <label for="aUser">Username</label>
+        <input id="aUser" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16" placeholder="e.g. finn_k">
+        <small id="aUserHint">3–16 letters, numbers or underscores. Other players see this.</small>
+      </div>
+      <div class="field">
+        <label for="aEmail">Email</label>
+        <input id="aEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="aPass">Password</label>
+        <input id="aPass" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+      </div>
+      <p class="formerr" id="aErr" role="alert"></p>
+      <button class="btn btn-main" id="aSubmit" type="submit"><span id="aSubmitT">Create account</span><span class="arrow">›</span></button>
+    </form>
+  </section>
+
+  <!-- HOME -->
+  <section class="screen" id="home" hidden>
+    <div class="homehead">
+      <div class="logo" aria-label="Daily 5">DAILY <span class="five">5</span></div>
+      <div class="whoami"><span id="meName"></span><button type="button" class="skip" id="logout">Log out</button></div>
+    </div>
+    <div class="rank" id="rankCard">
+      <div class="badge" id="rBadge">S</div>
+      <div class="tiername" id="rTier">Silver II</div>
+      <div class="rating"><span class="num" id="rRating">1,000</span> rating · <span id="rNext"></span></div>
+    </div>
+    <div class="ladder" id="homeLadder"></div>
+    <div class="stats">
+      <div class="stat"><b id="sW">0</b><span>Wins</span></div>
+      <div class="stat"><b id="sL">0</b><span>Losses</span></div>
+      <div class="stat"><b id="sStreak">0</b><span>Day streak</span></div>
+      <div class="stat"><b id="sBest">0</b><span>Best rating</span></div>
+    </div>
+    <button class="btn btn-main" id="playDaily"><span>Play today's match<small>One ranked match a day · same 5 categories for everyone</small></span><span class="arrow">›</span></button>
+    <div class="done" id="doneCard" hidden>
+      <div class="done-head"><span class="label">Today's result</span><span class="next">Next match in <b class="num" id="dCount">--:--:--</b></span></div>
+      <div class="done-res" id="dRes"></div>
+      <div class="pct" id="dPct" hidden></div>
+      <div class="ghostrec" id="dGhost" hidden></div>
+      <pre class="sharebox" id="dShare"></pre>
+      <button class="btn btn-alt" id="dShareBtn"><span>Share result</span><span class="arrow">↗</span></button>
+    </div>
+    <ul class="rules">
+      <li><b>One match a day.</b> Categories are revealed one round at a time. Leaving mid-match is a forfeit.</li>
+      <li><b>1 point per answer.</b> Volume wins. Close spellings count.</li>
+      <li><b>Win by more, climb faster.</b> Losing by 1 costs less than losing by 10.</li>
+      <li><b>Ghost opponents.</b> You face the most recent player near your rating, and your run becomes someone else's opponent.</li>
+    </ul>
+    <button class="btn btn-alt" id="openStats" hidden><span>Owner stats<small>Players, scores and top answers by day · only you see this</small></span><span class="arrow">›</span></button>
+    <p class="foot" id="foot">New set every day at <span id="dropTime">midnight ET</span></p>
+  </section>
+
+  <!-- OWNER STATS -->
+  <section class="screen" id="stats" hidden>
+    <div class="st-top"><button class="skip" id="stBack" type="button">← Home</button><span class="label">Owner only</span></div>
+    <div class="daynav">
+      <button type="button" id="stPrev" aria-label="Previous day">‹</button>
+      <div><div class="label">Stats for</div><div class="dayname" id="stDay"></div></div>
+      <button type="button" id="stNext" aria-label="Next day">›</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="stN">–</b><span>Players</span></div>
+      <div class="stat"><b id="stAvg">–</b><span>Avg score</span></div>
+      <div class="stat"><b id="stHigh">–</b><span>High</span></div>
+      <div class="stat"><b id="stLow">–</b><span>Low</span></div>
+    </div>
+    <p class="statnote" id="stNote"></p>
+    <div id="stBody">
+      <div class="block"><span class="label">Score spread</span><div class="hist" id="stHist"></div></div>
+      <div class="block"><span class="label">By round</span><div class="board"><table id="stRounds"></table></div></div>
+      <div class="block"><span class="label">Top answers</span><div class="answers" id="stAns"></div></div>
+      <div class="block"><span class="label">Players</span><div class="board scroll"><table id="stPlayers"></table></div></div>
+      <div class="block"><span class="label">All players</span><div class="board scroll"><table id="stAll"></table></div></div>
+    </div>
+  </section>
+
+  <!-- QUEUE -->
+  <section class="screen" id="queue" hidden>
+    <div class="center">
+      <div id="qSearch" class="qsearch">
+        <div class="radar"></div>
+        <div><h2 class="qtitle">Finding opponent</h2>
+        <p class="tag">Searching near <span class="num" id="qRating">1,000</span></p></div>
+      </div>
+      <div id="qFound" class="qfound" hidden>
+        <div class="label" id="qMode">Daily 5</div>
+        <div class="vs">
+          <div class="player" style="--c:var(--you)"><div class="nm" id="qYouN">You</div><div class="rt"><span class="num" id="qYouR"></span> · <span id="qYouT"></span></div></div>
+          <div class="vstext">VS</div>
+          <div class="player" style="--c:var(--opp)"><div class="nm" id="qOppN"></div><div class="rt"><span class="num" id="qOppR"></span> · <span id="qOppT"></span></div></div>
+        </div>
+        <div class="ghostnote">Ghost run · <span id="qAgo"></span></div>
+      </div>
+      <p class="formerr" id="qErr" role="alert"></p>
+    </div>
+  </section>
+
+  <!-- INTRO -->
+  <section class="screen" id="intro" hidden>
+    <div class="center">
+      <div class="label" id="iRound">Round 1 of 5</div>
+      <div class="flash" id="iCat"></div>
+      <div class="count" id="iCount">3</div>
+    </div>
+  </section>
+
+  <!-- ROUND -->
+  <section class="screen" id="round" hidden>
+    <div class="hud">
+      <div class="side you"><span class="who">You</span><span class="sc" id="gYou">0</span></div>
+      <div class="clock num" id="gClock">15</div>
+      <div class="side opp r"><span class="who" id="gOppN">Ghost</span><span class="sc" id="gOpp">0</span></div>
+    </div>
+    <div class="timer"><i id="gBar"></i></div>
+    <div class="cathead"><span class="label" id="gRound">Round 1 of 5</span><h2 id="gCat"></h2></div>
+    <form id="gForm" class="entry" autocomplete="off">
+      <input id="gInput" type="text" placeholder="Type an answer, press Enter" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" aria-label="Your answer">
+    </form>
+    <div class="fb" id="gFb" aria-live="polite"></div>
+    <div class="chips" id="gChips"></div>
+    <button class="skip" id="gEnd" type="button">End round early</button>
+  </section>
+
+  <!-- ROUND RESULT -->
+  <section class="screen" id="rres" hidden>
+    <div class="banner" id="rrBanner"></div>
+    <p class="sub" id="rrSub"></p>
+    <div class="board"><table id="rrTable"></table></div>
+    <div class="lead" id="rrLead"></div>
+    <div class="answers">
+      <div><span class="label">Your answers</span><div class="chips" id="rrYou"></div></div>
+      <div><span class="label" id="rrOppL">Their answers</span><div class="chips" id="rrOpp"></div></div>
+      <div id="rrTopW"><span class="label">Most named today</span><div class="chips" id="rrTop"></div></div>
+      <div><span class="label">Some you missed</span><div class="chips" id="rrMiss"></div></div>
+      <p class="statnote" id="rrNote"></p>
+    </div>
+    <button class="btn btn-main" id="rrNext"><span id="rrNextT">Next round</span><span class="arrow">›</span></button>
+  </section>
+
+  <!-- FINAL -->
+  <section class="screen" id="final" hidden>
+    <div class="banner big" id="fBanner"></div>
+    <p class="sub" id="fSub"></p>
+    <div class="pct" id="fPct" hidden></div>
+    <div class="delta" id="fDelta">
+      <div class="label">Rating</div>
+      <div class="chg num" id="fChg">…</div>
+      <div><span class="num" id="fRating"></span> · <b id="fTier"></b></div>
+      <div class="why" id="fWhy"></div>
+    </div>
+    <div class="ladder" id="fLadder"></div>
+    <p class="formerr" id="fErr" role="alert"></p>
+    <button class="btn btn-alt" id="fRetry" hidden><span>Try saving again</span><span class="arrow">↻</span></button>
+    <div class="board"><table id="fTable"></table></div>
+    <div>
+      <span class="label" style="display:block;margin-bottom:8px">Share your result</span>
+      <pre class="sharebox" id="fShare"></pre>
+    </div>
+    <button class="btn btn-main" id="fShareBtn"><span>Share result</span><span class="arrow">↗</span></button>
+    <p class="nextline">Next Daily 5 in <b class="num" id="fCount">--:--:--</b></p>
+    <button class="btn btn-alt" id="fHome"><span>Back to home</span><span class="arrow">⌂</span></button>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="categories.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
