@@ -35,7 +35,28 @@ function timeAgo(iso){
 }
 function shiftDay(d, n){ const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); }
 function dayLabel(d, opts = {month:"short", day:"numeric"}){ return new Date(d + "T12:00:00Z").toLocaleDateString("en-US", {...opts, timeZone:"UTC"}); }
-function dailyCats(day){ return shuffle(CATS, rng(hash("d5-" + day))).slice(0, ROUNDS); }
+// Each day picks 5 from the categories that existed that day (so adding new ones never
+// changes past days), skipping anything used in the previous 6 days.
+const SET_EPOCH = "2026-10-17", NO_REPEAT_DAYS = 6, _sets = {};
+function pickSet(day, recent){
+  const pool = CATS.filter(c => (!c.from || c.from <= day) && !recent.has(c.id));
+  return shuffle(pool, rng(hash("d5-" + day))).slice(0, ROUNDS);
+}
+function dailyCats(day){
+  if (_sets[day]) return _sets[day];
+  if (day < SET_EPOCH) return (_sets[day] = pickSet(day, new Set()));
+  // Walk forward from the first day so every day's set is fixed and repeat-free.
+  let d = SET_EPOCH;
+  while (true){
+    if (!_sets[d]){
+      const recent = new Set();
+      for (let k = 1; k <= NO_REPEAT_DAYS; k++){ const p = shiftDay(d, -k); if (p >= SET_EPOCH) _sets[p].forEach(c => recent.add(c.id)); }
+      _sets[d] = pickSet(d, recent);
+    }
+    if (d >= day) return _sets[day];
+    d = shiftDay(d, 1);
+  }
+}
 const ADJ=["blitz","clutch","sneaky","turbo","quiet","lucky","frosty","rapid","golden","salty","crispy","hyper","mellow","rogue","cosmic"];
 const NOUN=["mango","falcon","panda","noodle","otter","comet","walrus","taco","bison","pickle","heron","waffle","lynx","badger","pretzel"];
 const ghostName = () => ADJ[Math.floor(Math.random()*ADJ.length)] + NOUN[Math.floor(Math.random()*NOUN.length)] + "_bot";
