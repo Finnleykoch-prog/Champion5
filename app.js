@@ -1,4 +1,4 @@
-/* Daily 5 — game logic. Scores, ratings and matchmaking are decided on the
+/* Champion 5 — game logic. Scores, ratings and matchmaking are decided on the
    server (see supabase/setup.sql); this file runs the rounds and the screens. */
 (() => {
 "use strict";
@@ -257,7 +257,7 @@ function shareText(run, line){
   const margin = run.total - sum(run.opp_rounds);
   const after = run.rating_before + run.rating_delta;
   return [
-    `Daily 5 · ${dayLabel(run.day)}`,
+    `Champion 5 · ${dayLabel(run.day)}`,
     `${run.total} correct · ${margin > 0 ? "Won" : margin < 0 ? "Lost" : "Draw"}`,
     ...(line ? [line] : []),
     ...lines,
@@ -408,7 +408,7 @@ async function startMatch(){
         you: [], them: [], youAns: [], themAns: [], youTimes: [], submit: null, result: null };
 
   $("qSearch").hidden = true; $("qFound").hidden = false;
-  $("qMode").textContent = `Daily 5 · ${dayLabel(DAY)}`;
+  $("qMode").textContent = `Champion 5 · ${dayLabel(DAY)}`;
   $("qYouN").textContent = ME.username;
   $("qYouR").textContent = fmt(ME.rating); $("qYouT").textContent = tierOf(ME.rating).name;
   $("qOppN").textContent = opp.name; $("qOppR").textContent = fmt(opp.rating); $("qOppT").textContent = tierOf(opp.rating).name;

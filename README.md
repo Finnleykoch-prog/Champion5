@@ -1,4 +1,4 @@
-# Daily 5
+# Champion 5
 
 A daily head-to-head naming game. Five categories, 15 seconds each, one ranked match a day.
 
@@ -16,7 +16,7 @@ A daily head-to-head naming game. Five categories, 15 seconds each, one ranked m
 ## Setup (about 30 minutes)
 
 ### 1. Supabase: the database and sign-in
-1. Go to supabase.com → **New project**. Name it `daily5`, set a database password (save it somewhere), pick the region closest to your players (e.g. East US), and click **Create**.
+1. Go to supabase.com → **New project**. Name it `champion5`, set a database password (save it somewhere), pick the region closest to your players (e.g. East US), and click **Create**.
 2. When it's ready, open **SQL Editor** → **New query**. Paste the whole of `supabase/setup.sql` and click **Run**. You should see "Success. No rows returned."
 3. Open **Authentication** → **Sign In / Providers** → **Email** and turn **off** "Confirm email", then save. (Supabase's free email sender only sends a few emails per hour, so confirmation emails would block friends from signing up.)
 4. Open **Project Settings** → **API** (or **API Keys**). Copy the **Project URL** and the **anon public** key. If you only see a "publishable" key, open the **Legacy API keys** tab and copy the `anon` key there.
@@ -25,12 +25,12 @@ A daily head-to-head naming game. Five categories, 15 seconds each, one ranked m
 Replace the two `PASTE_...` values with your Project URL and anon key. The anon key is meant to be public; the rules in `setup.sql` control what anyone can read or change.
 
 ### 3. GitHub: store the code
-1. On github.com click **+** → **New repository**. Name it `daily5`, leave it **Public** or **Private**, and click **Create repository**.
+1. On github.com click **+** → **New repository**. Name it `champion5`, leave it **Public** or **Private**, and click **Create repository**.
 2. On the next page click **uploading an existing file**. Drag in everything from this folder (including the `supabase` folder) and click **Commit changes**.
 
 ### 4. Vercel: put it online
-1. On vercel.com click **Add New…** → **Project**, find `daily5` and click **Import**.
-2. Leave every setting as it is and click **Deploy**. In under a minute you get a link like `daily5-xyz.vercel.app`.
+1. On vercel.com click **Add New…** → **Project**, find `champion5` and click **Import**.
+2. Leave every setting as it is and click **Deploy**. In under a minute you get a link like `champion5-xyz.vercel.app`.
 
 ### 5. Make yourself the owner
 Sign up on your new site, then in Supabase → SQL Editor run (with your username):

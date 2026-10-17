@@ -1,4 +1,4 @@
-/* Daily 5 — categories and answer matching.
+/* Champion 5 — categories and answer matching.
 
    HOW TO EDIT A CATEGORY
    Each category is [id, "Display name", difficulty, "answer,answer,..."].
