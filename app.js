@@ -11,6 +11,10 @@ if (!window.supabase || !CFG.url || !CFG.anonKey || CFG.url.includes("PASTE")) {
   $("loadMsg").textContent = "Setup isn't finished: add your Supabase URL and key to config.js.";
   return;
 }
+// Read the address bar before the client consumes it: a password-reset link
+// arrives as #...type=recovery, an expired one as #error=...
+const RECOVERY_LINK = /type=recovery/.test(location.hash);
+const LINK_ERROR = /error_code=([a-z_]+)/.exec(location.hash);
 const sb = window.supabase.createClient(CFG.url, CFG.anonKey);
 
 /* ---------------- Helpers ---------------- */
@@ -146,6 +150,7 @@ function setMode(m){
   $("aSubmitT").textContent = m === "up" ? "Create account" : "Log in";
   $("aPass").autocomplete = m === "up" ? "new-password" : "current-password";
   $("aErr").textContent = ""; $("aErr").className = "formerr";
+  $("aForgot").hidden = m !== "in";
 }
 $("tabUp").onclick = () => setMode("up");
 $("tabIn").onclick = () => setMode("in");
@@ -203,9 +208,60 @@ $("authForm").addEventListener("submit", async ev => {
 
 $("logout").onclick = async () => { await sb.auth.signOut(); };
 
+/* ---------------- Password reset ---------------- */
+$("aForgot").onclick = () => { $("fEmail").value = $("aEmail").value.trim(); $("fpMsg").textContent = ""; show("forgot"); };
+$("fpBack").onclick = () => { setMode("in"); show("auth"); };
+$("forgotForm").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const msg = $("fpMsg"), email = $("fEmail").value.trim();
+  msg.className = "formerr";
+  if (!/^\S+@\S+\.\S+$/.test(email)){ msg.textContent = "Enter the email you signed up with."; return; }
+  $("fpSubmit").disabled = true;
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + "/" });
+    if (error) throw error;
+    msg.className = "formerr info";
+    msg.textContent = "If that email has an account, a reset link is on its way. Check your inbox and spam folder.";
+  } catch (e){
+    msg.textContent = /rate|too many|429/i.test(e.message || "") ? "Too many reset emails were sent just now. Try again in a little while." : "Couldn't send the email. Check the address and try again.";
+  } finally { $("fpSubmit").disabled = false; }
+});
+
+let recovering = RECOVERY_LINK;
+$("newpassForm").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const msg = $("npMsg"), a = $("npPass").value, b = $("npPass2").value;
+  msg.className = "formerr";
+  if (a.length < 6){ msg.textContent = "Use at least 6 characters."; return; }
+  if (a !== b){ msg.textContent = "The two passwords don't match."; return; }
+  $("npSubmit").disabled = true;
+  try {
+    const { error } = await sb.auth.updateUser({ password: a });
+    if (error) throw error;
+    recovering = false;
+    history.replaceState(null, "", location.pathname);
+    toast("Password updated");
+    booted = true; boot();
+  } catch (e){
+    msg.textContent = /different from the old/i.test(e.message || "") ? "Pick a password you haven't used before." : (e.message || "Couldn't save the password. Try again.");
+  } finally { $("npSubmit").disabled = false; }
+});
+
 let booted = false;
 sb.auth.onAuthStateChange((event, session) => {
-  if (!session){ booted = false; ME = null; setMode("up"); show("auth"); return; }
+  if (event === "PASSWORD_RECOVERY") recovering = true;
+  if (recovering && session){
+    $("npWho").textContent = session.user && session.user.email ? `For ${session.user.email}` : "";
+    show("newpass"); return;
+  }
+  if (!session){
+    booted = false; ME = null; setMode(LINK_ERROR ? "in" : "up"); show("auth");
+    if (LINK_ERROR && !booted){
+      $("aErr").textContent = /expired/.test(LINK_ERROR[1]) ? "That reset link has expired. Tap “Forgot your password?” to get a new one." : "That link didn't work. Tap “Forgot your password?” to get a new one.";
+      history.replaceState(null, "", location.pathname);
+    }
+    return;
+  }
   if (!booted){ booted = true; setTimeout(boot, 0); }   // run outside the auth callback
 });
 
@@ -621,6 +677,63 @@ $("fHome").onclick = async () => { M = null; try { await loadState(); } catch (e
 /* ---------------- Owner stats ---------------- */
 let stDay = null, stToken = 0;
 $("openStats").onclick = () => openStats(DAY);
+
+/* ---------------- Leaderboard ---------------- */
+let LB = null, lbTab = "all";
+$("openLeaders").onclick = () => openLeaders();
+$("lbBack").onclick = renderHome;
+$("lbTabAll").onclick = () => { lbTab = "all"; renderLeaders(); };
+$("lbTabToday").onclick = () => { lbTab = "today"; renderLeaders(); };
+async function openLeaders(){
+  show("leaders");
+  $("lbList").innerHTML = ""; $("lbMe").textContent = ""; $("lbNote").textContent = "Loading…";
+  try { LB = await rpc("get_leaderboard"); }
+  catch (e){ $("lbNote").textContent = /get_leaderboard/.test(e.message || "") ? "The leaderboard isn't set up yet: run update-1-leaderboard.sql in Supabase." : "Couldn't load the leaderboard. Try again in a moment."; return; }
+  $("lbDay").textContent = dayLabel(LB.day, {weekday:"short", month:"short", day:"numeric"});
+  renderLeaders();
+}
+function renderLeaders(){
+  if (!LB) return;
+  $("lbTabAll").setAttribute("aria-selected", lbTab === "all"); $("lbTabToday").setAttribute("aria-selected", lbTab === "today");
+  const me = LB.me, list = $("lbList"), box = $("lbMe");
+  list.innerHTML = ""; box.textContent = "";
+  const rows = lbTab === "all" ? LB.top : LB.today;
+  // Competition ranking: ties share a place (1, 2, 2, 4).
+  const key = r => lbTab === "all" ? r.rating : r.total;
+  let place = 0;
+  rows.forEach((r, i) => {
+    if (i === 0 || key(r) !== key(rows[i - 1])) place = i + 1;
+    const li = document.createElement("li"); li.className = "lbrow" + (place <= 3 ? " p" + place : "") + (r.username === me.username ? " me" : "");
+    const rk = document.createElement("span"); rk.className = "rk"; rk.textContent = place;
+    const who = document.createElement("span"); who.className = "who";
+    const nm = document.createElement("b"); nm.textContent = r.username;
+    const sub = document.createElement("small");
+    const t = tierOf(r.rating), dot = document.createElement("i"); dot.className = "dot"; dot.style.background = t.c;
+    sub.append(dot, t.name);
+    who.append(nm, sub);
+    const sc = document.createElement("span"); sc.className = "sc";
+    const rec = document.createElement("span"); rec.className = "rec";
+    if (lbTab === "all"){
+      sc.textContent = fmt(r.rating);
+      rec.textContent = `${r.wins}–${r.losses}${r.draws ? "–" + r.draws : ""}`;
+    } else {
+      sc.textContent = r.total;
+      rec.className = "rec " + (r.result > 0 ? "w" : r.result < 0 ? "l" : "t");
+      rec.textContent = r.result > 0 ? "Won" : r.result < 0 ? "Lost" : "Draw";
+    }
+    li.append(rk, who, sc, rec); list.appendChild(li);
+  });
+  const line = (main, small) => { const b = document.createElement("span"); b.textContent = main; const s = document.createElement("small"); s.textContent = small; box.append(b, s); };
+  if (lbTab === "all"){
+    if (me.rank) line(`You're #${me.rank} of ${me.ranked}`, `${fmt(me.rating)} · ${tierOf(me.rating).name}`);
+    else line("You're not ranked yet", "Finish a match to get on the board");
+    $("lbNote").textContent = rows.length ? (LB.me.ranked > rows.length ? `Showing the top ${rows.length} of ${LB.me.ranked} ranked players.` : "") : "No ranked players yet. Be the first.";
+  } else {
+    if (me.today_rank) line(`You're #${me.today_rank} of ${me.today_count} today`, `${me.today_total} correct`);
+    else line("You haven't played today", me.today_count ? `${me.today_count} player${me.today_count === 1 ? "" : "s"} so far` : "Nobody has played yet");
+    $("lbNote").textContent = rows.length ? `Resets at ${new Date(Date.now() + secsToDrop() * 1000).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"})} your time.` : "No finished matches yet today.";
+  }
+}
 $("stBack").onclick = renderHome;
 $("stPrev").onclick = () => openStats(shiftDay(stDay, -1));
 $("stNext").onclick = () => { if (stDay < DAY) openStats(shiftDay(stDay, 1)); };

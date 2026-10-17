@@ -229,3 +229,24 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .drop{color:var(--muted);font-size:13px}
 .homehead .whoami{flex-direction:row;align-items:baseline;gap:10px}
 @media (max-width:420px){.lad-labels span{letter-spacing:0;font-size:9px}}
+
+/* ---------- Leaderboard ---------- */
+.lbtitle,.formtitle{font-family:var(--display);font-size:clamp(26px,8vw,36px);font-weight:400;line-height:1.05}
+.formtitle{font-size:clamp(22px,6.5vw,28px);margin-bottom:6px}
+.lbme{background:rgba(76,201,240,.1);border:1px solid rgba(76,201,240,.4);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-weight:700}
+.lbme:empty{display:none}
+.lbme small{color:var(--muted);font-weight:500;font-size:13px}
+.lblist{list-style:none;margin:0;padding:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.lbrow{display:grid;grid-template-columns:3ch minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line)}
+.lbrow:last-child{border-bottom:0}
+.lbrow.me{background:rgba(76,201,240,.1)}
+.lbrow .rk{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.lbrow.p1 .rk{color:#ffc93c}.lbrow.p2 .rk{color:#c3cddc}.lbrow.p3 .rk{color:#c88a52}
+.lbrow .who{display:flex;flex-direction:column;min-width:0}
+.lbrow .who b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbrow .who small{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.lbrow .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.lbrow .sc{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.lbrow .rec{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;min-width:5ch}
+.lbrow .rec.w{color:var(--good)} .lbrow .rec.l{color:var(--opp)} .lbrow .rec.t{color:var(--bulb)}
+.authform .skip{padding:4px}

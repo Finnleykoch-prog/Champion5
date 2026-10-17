@@ -5,8 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Champion 5</title>
 <meta name="description" content="Five categories. 15 seconds each. Name as many as you can and outscore your opponent. One ranked match a day.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Champion 5">
+<meta property="og:url" content="https://champion5.site/">
 <meta property="og:title" content="Champion 5">
-<meta property="og:description" content="Five categories. 15 seconds each. One ranked match a day.">
+<meta property="og:description" content="Five categories. 15 seconds each. Name as many as you can and beat your opponent. One ranked match a day.">
+<meta property="og:image" content="https://champion5.site/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Champion 5: five categories, 15 seconds each, one ranked match a day">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Champion 5">
+<meta name="twitter:description" content="Five categories. 15 seconds each. One ranked match a day.">
+<meta name="twitter:image" content="https://champion5.site/og.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
 <meta name="theme-color" content="#0d1626">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1626'/%3E%3Ctext x='32' y='48' font-family='Arial Black,Impact,sans-serif' font-size='44' text-anchor='middle' fill='%23ffc93c'%3E5%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,7 +47,7 @@
     <form id="authForm" class="authform" novalidate>
       <div class="field" id="fUser">
         <label for="aUser">Username</label>
-        <input id="aUser" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16" placeholder="e.g. Liam_Smith">
+        <input id="aUser" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16" placeholder="e.g. trivia_king">
         <small id="aUserHint">3–16 letters, numbers or underscores. Other players see this.</small>
       </div>
       <div class="field">
@@ -48,6 +60,40 @@
       </div>
       <p class="formerr" id="aErr" role="alert"></p>
       <button class="btn btn-main" id="aSubmit" type="submit"><span id="aSubmitT">Create account</span><span class="arrow">›</span></button>
+      <button class="skip" id="aForgot" type="button" hidden>Forgot your password?</button>
+    </form>
+  </section>
+
+  <!-- FORGOT PASSWORD -->
+  <section class="screen" id="forgot" hidden>
+    <div><div class="logo" aria-label="Champion 5">CHAMPION <span class="five">5</span></div></div>
+    <div><h2 class="formtitle">Reset your password</h2><p class="tag">Enter the email you signed up with and we'll send you a link to set a new password.</p></div>
+    <form id="forgotForm" class="authform" novalidate>
+      <div class="field">
+        <label for="fEmail">Email</label>
+        <input id="fEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      </div>
+      <p class="formerr" id="fpMsg" role="alert"></p>
+      <button class="btn btn-main" id="fpSubmit" type="submit"><span>Send reset link</span><span class="arrow">›</span></button>
+      <button class="skip" id="fpBack" type="button">← Back to log in</button>
+    </form>
+  </section>
+
+  <!-- SET NEW PASSWORD (after clicking the email link) -->
+  <section class="screen" id="newpass" hidden>
+    <div><div class="logo" aria-label="Champion 5">CHAMPION <span class="five">5</span></div></div>
+    <div><h2 class="formtitle">Choose a new password</h2><p class="tag" id="npWho"></p></div>
+    <form id="newpassForm" class="authform" novalidate>
+      <div class="field">
+        <label for="npPass">New password</label>
+        <input id="npPass" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+      </div>
+      <div class="field">
+        <label for="npPass2">Type it again</label>
+        <input id="npPass2" type="password" autocomplete="new-password">
+      </div>
+      <p class="formerr" id="npMsg" role="alert"></p>
+      <button class="btn btn-main" id="npSubmit" type="submit"><span>Save new password</span><span class="arrow">›</span></button>
     </form>
   </section>
 
@@ -84,8 +130,22 @@
       <li><b>Win by more, climb faster.</b> Losing by 1 costs less than losing by 10.</li>
       <li><b>Ghost opponents.</b> You face the most recent player near your rating, and your run becomes someone else's opponent.</li>
     </ul>
+    <button class="btn btn-alt" id="openLeaders"><span>Leaderboard<small id="lbTeaser">Top players and today's best scores</small></span><span class="arrow">›</span></button>
     <button class="btn btn-alt" id="openStats" hidden><span>Owner stats<small>Players, scores and top answers by day · only you see this</small></span><span class="arrow">›</span></button>
     <p class="foot" id="foot">New set every day at <span id="dropTime">midnight ET</span></p>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section class="screen" id="leaders" hidden>
+    <div class="st-top"><button class="skip" id="lbBack" type="button">← Home</button><span class="label" id="lbDay"></span></div>
+    <h2 class="lbtitle">Leaderboard</h2>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="lbTabAll" aria-selected="true">Top rated</button>
+      <button type="button" role="tab" id="lbTabToday" aria-selected="false">Today's scores</button>
+    </div>
+    <div class="lbme" id="lbMe"></div>
+    <ol class="lblist" id="lbList"></ol>
+    <p class="statnote" id="lbNote"></p>
   </section>
 
   <!-- OWNER STATS -->
