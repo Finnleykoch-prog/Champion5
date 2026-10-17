@@ -385,3 +385,15 @@ a.skip.inline{text-decoration:underline;color:var(--muted)}
 .wl-vs .sc{font-family:var(--display);font-size:48px;line-height:1}
 .wl-vs .you .who,.wl-vs .you .sc{color:var(--you)} .wl-vs .opp .who,.wl-vs .opp .sc{color:var(--opp)}
 .wl-center{justify-content:center}
+
+/* ---------- Ladder tooltips ---------- */
+.lad-hits{position:absolute;left:0;right:0;top:16px;height:24px;z-index:2}
+.lad-hits span{position:absolute;top:0;bottom:0;cursor:pointer;border-radius:4px}
+.lad-hits span.hot,.lad-hits span:focus-visible{box-shadow:inset 0 0 0 2px var(--fg);outline:none}
+.lad-labels .tiplabel{cursor:pointer}
+.lad-labels .tiplabel:hover,.lad-labels .tiplabel:focus-visible{color:var(--fg);outline:none}
+.lad-tip{position:absolute;top:46px;transform:translateX(-50%);z-index:5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 11px;display:flex;flex-direction:column;align-items:center;gap:1px;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.45);pointer-events:none}
+.lad-tip::before{content:"";position:absolute;top:-6px;left:50%;width:10px;height:10px;background:var(--bg);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.lad-tip b{font-family:var(--display);font-weight:400;font-size:14px}
+.lad-tip span{font-family:var(--mono);font-size:13px;color:var(--fg)}
+.lad-tip small{font-size:11px;color:var(--muted);font-weight:700}

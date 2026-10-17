@@ -481,6 +481,7 @@ function renderLadder(el, r, prev){
     const l = document.createElement("span"); l.style.flex = w; l.textContent = t.n; if (t.n === d.tier) l.classList.add("on"); lb.appendChild(l);
   });
   sc.appendChild(tr);
+  addLadderTips(sc, lb, r);
   if (prev != null && prev !== r){ const g = document.createElement("span"); g.className = "lad-ghost"; g.style.left = toPct(prev) + "%"; sc.appendChild(g); }
   const me = document.createElement("div"); me.className = "lad-me"; me.innerHTML = "<em>You</em>";
   me.style.left = toPct(prev != null ? prev : r) + "%"; sc.appendChild(me);
@@ -506,6 +507,56 @@ function renderLadder(el, r, prev){
     ends.appendChild(mk("r", "Promotion", up.name, `${need} pt${need === 1 ? "" : "s"} · about ${wins} win${wins === 1 ? "" : "s"}`, wins === 1 ? "near" : ""));
   } else ends.appendChild(mk("r", "Promotion", "Top tier", "Champion has no ceiling"));
   el.appendChild(ends);
+}
+
+/* Hover (or tap) a division on the ladder to see its name and point range. */
+function rangeText(lo, hi){
+  if (!isFinite(lo)) return `Below ${fmt(hi)}`;
+  if (!isFinite(hi)) return `${fmt(lo)} and up`;
+  return `${fmt(lo)}–${fmt(hi - 1)}`;
+}
+function addLadderTips(sc, labels, r){
+  const tip = document.createElement("div"); tip.className = "lad-tip"; tip.hidden = true; tip.setAttribute("role", "status");
+  const hits = document.createElement("div"); hits.className = "lad-hits";
+  let pinned = null;
+  const showTip = (el, title, range, note, color, center) => {
+    tip.textContent = "";
+    const t = document.createElement("b"); t.textContent = title; t.style.color = color;
+    const g = document.createElement("span"); g.textContent = range;
+    tip.append(t, g);
+    if (note){ const n = document.createElement("small"); n.textContent = note; tip.appendChild(n); }
+    tip.style.left = Math.max(14, Math.min(86, center)) + "%";
+    tip.hidden = false;
+    hits.querySelectorAll(".hot").forEach(x => x.classList.remove("hot")); if (el) el.classList.add("hot");
+  };
+  const hide = () => { if (pinned) return; tip.hidden = true; hits.querySelectorAll(".hot").forEach(x => x.classList.remove("hot")); };
+  const noteFor = (lo, hi) => r >= lo && r < hi ? "Your rank" : lo > r ? `${fmt(lo - r)} pts away` : "Passed";
+  const wire = (el, show) => {
+    el.addEventListener("pointerenter", e => { if (e.pointerType === "mouse" && !pinned) show(); });
+    el.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") hide(); });
+    el.addEventListener("click", e => { e.stopPropagation(); if (pinned === el){ pinned = null; hide(); return; } pinned = el; show(); });
+    el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); el.click(); } });
+    el.addEventListener("focus", () => { if (!pinned) show(); });
+    el.addEventListener("blur", hide);
+  };
+  DIVS.forEach(d => {
+    const a = toPct(isFinite(d.lo) ? d.lo : SCALE_LO), b = toPct(isFinite(d.hi) ? d.hi : SCALE_HI);
+    if (b <= a) return;
+    const h = document.createElement("span"); h.tabIndex = 0;
+    h.style.left = a + "%"; h.style.width = (b - a) + "%";
+    h.setAttribute("aria-label", `${d.name}: ${rangeText(d.lo, d.hi)} rating`);
+    wire(h, () => showTip(h, d.name, rangeText(d.lo, d.hi), noteFor(d.lo, d.hi), d.c, (a + b) / 2));
+    hits.appendChild(h);
+  });
+  // The tier names under the bar show the whole tier.
+  [...labels.children].forEach((l, ti) => {
+    const t = TIERS[ti], lo = ti === 0 ? -Infinity : t.min, hi = TIERS[ti + 1] ? TIERS[ti + 1].min : Infinity;
+    l.tabIndex = 0; l.classList.add("tiplabel");
+    const a = toPct(isFinite(lo) ? lo : SCALE_LO), b = toPct(isFinite(hi) ? hi : SCALE_HI);
+    wire(l, () => showTip(null, t.n, rangeText(lo, hi), noteFor(lo, hi), t.c, (a + b) / 2));
+  });
+  document.addEventListener("click", () => { if (pinned){ pinned = null; hide(); } });
+  sc.append(hits, tip);
 }
 
 /* ---------------- Share ---------------- */
