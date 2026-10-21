@@ -332,6 +332,7 @@ const localGameDay = () => new Intl.DateTimeFormat("en-CA", { timeZone: GAME_TZ 
 let PR = null;
 function pShow(id){ ["pIntro","pRound","pResult"].forEach(x => $(x).hidden = x !== id); }
 async function startPractice(){
+  primeKeyboard();
   const day = localGameDay(), today = new Set(dailyCats(day).map(c => c.id));
   const pool = CATS.filter(c => (!c.from || c.from <= day) && !today.has(c.id) && c.entries.length >= 20);
   const cat = pool[Math.floor(Math.random() * pool.length)];
@@ -347,7 +348,7 @@ async function startPractice(){
 function practiceRound(){
   const cat = PR.cat; pShow("pRound");
   $("pCat").textContent = cat.name; $("pYou").textContent = 0; $("pOpp").textContent = 0; $("pChips").innerHTML = ""; $("pFb").textContent = ""; $("pFb").className = "fb";
-  const input = $("pInput"); input.value = ""; setTimeout(() => input.focus(), 30);
+  const input = $("pInput"); input.value = ""; focusAnswer(input);
   const k = Math.min(cat.entries.length, 4 + Math.floor(Math.random() * 4));   // a beatable rival: 4–7
   const oppT = Array.from({length: k}, () => 800 + Math.random() * (ROUND_MS - 1500)).sort((a, b) => a - b);
   const start = performance.now(); let shown = 0; PR.opp = k;
@@ -386,7 +387,7 @@ function practiceDone(){
   if (y > o) confetti(140);
 }
 $("prJoin").onclick = () => { PR = null; show("auth"); goForm("up"); };
-$("pQuit").onclick = () => { PR = null; show("auth"); };
+$("pQuit").onclick = () => { PR = null; releaseKeyboard(); $("pInput").blur(); show("auth"); };
 
 /* ---------------- Password reset ---------------- */
 $("aForgot").onclick = () => { $("fEmail").value = $("aEmail").value.trim(); $("fpMsg").textContent = ""; show("forgot"); };
@@ -676,9 +677,23 @@ setInterval(() => {
 }, 1000);
 
 /* ---------------- Match ---------------- */
+/* Phones only open the keyboard when an input is focused during a tap.
+   On the tap that starts a match or round, focus a hidden input so the
+   keyboard is already up; the real answer box takes over when the round starts. */
+function primeKeyboard(){
+  const k = $("kbKeep"); if (!k) return;
+  k.value = "";
+  try { k.focus({ preventScroll: true }); } catch (e) { k.focus(); }
+}
+function releaseKeyboard(){ const k = $("kbKeep"); if (k && document.activeElement === k) k.blur(); }
+function focusAnswer(input){
+  const go = () => { try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); } };
+  go(); setTimeout(go, 30);
+}
 $("playDaily").onclick = startMatch;
 
 async function startMatch(){
+  primeKeyboard();
   show("queue");
   $("qSearch").hidden = false; $("qFound").hidden = true; $("qErr").textContent = "";
   $("qRating").textContent = fmt(ME.rating);
@@ -690,9 +705,9 @@ async function startMatch(){
       wait(1400 + Math.random() * 800)
     ]);
   } catch (e){
-    if (/already_played|banned/.test(e.message || "")){ await loadState(); renderHome(); return; }
+    if (/already_played|banned/.test(e.message || "")){ releaseKeyboard(); await loadState(); renderHome(); return; }
     $("qErr").textContent = "Couldn't start the match. Check your connection and try again.";
-    setTimeout(() => boot(), 2500); return;
+    releaseKeyboard(); setTimeout(() => boot(), 2500); return;
   }
   DAY = start.day;
   const cats = dailyCats(DAY), o = start.opponent;
@@ -755,7 +770,7 @@ function playRound(cat){
   $("gCat").textContent = cat.name; $("gRound").textContent = `Round ${M.round + 1} of ${ROUNDS}`;
   $("gOppN").textContent = M.opp.name; $("gYou").textContent = 0; $("gOpp").textContent = 0;
   $("gChips").innerHTML = ""; $("gFb").textContent = ""; $("gFb").className = "fb";
-  const input = $("gInput"); input.value = ""; input.disabled = false; setTimeout(() => input.focus(), 30);
+  const input = $("gInput"); input.value = ""; input.disabled = false; focusAnswer(input);
   const start = performance.now();
   const bump = el => { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); };
   const fb = (msg, cls) => { const e = $("gFb"); e.textContent = msg; e.className = "fb " + cls; };
@@ -854,7 +869,7 @@ function roundResult(){
     : `Percentages show how many of today's ${N} player${N === 1 ? "" : "s"} named each answer.`;
   const last = i === ROUNDS - 1;
   $("rrNextT").textContent = last ? "See final result" : `Round ${i + 2}: get ready`;
-  $("rrNext").onclick = () => { if (last) finalResult(); else { M.round++; nextRound(); } };
+  $("rrNext").onclick = () => { if (last) finalResult(); else { primeKeyboard(); M.round++; nextRound(); } };
   if (diff >= 3) confetti(diff >= 6 ? 160 : 90);
   setTimeout(() => $("rrNext").focus(), 300);
 }
